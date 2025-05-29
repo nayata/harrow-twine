@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta charset="utf-8"/>
+		<link rel="stylesheet" href="main.css">
+		<title>Harrow</title>
+	</head>
+	<body>
+		<tw-storydata name="Story" startnode="1" creator="Twine" creator-version="2.10.0" format="Harrow" format-version="1.0.0" ifid="7CA64ECA-7052-4AD0-8509-4A7978D346DF" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Start" tags="" position="400,100" size="100,100">[health = 60]
+			[damage = 30]
+			[potions = 3]
+			
+			[monster.health = 10]
+			[monster.type = fast]
+			
+			[hit = default]
+			
+			
+			// First
+			
+			The sun has almost set by the time you arrive in the crumbling city of Dravenhold. 
+			Shadows stretch long and sharp over the cracked cobblestones, and the air is heavy with decay. 
+			You are here for one purpose: to kill the monster.
+			
+			A faint voice calls out, halting your steps.
+			
+			- walk to beast nest : Church
+			- aproach voice : Talk</tw-passagedata><tw-passagedata pid="2" name="Talk" tags="" position="300,300" size="100,100">Turning, you find a wounded city guard slumped against a wall, clutching a deep wound in his side. 
+			“It’s fast,” he wheezes, blood dripping from his lips.
+			“Too fast...” His eyes close as he slips into unconsciousness.
+			
+			[move Church]</tw-passagedata><tw-passagedata pid="3" name="Church" tags="" position="500,300" size="100,100">You press on toward the towering church at the center of the city. 
+			The massive doors hang slightly ajar, and the scent of rot grows stronger with each step. 
+			
+			---
+			
+			You know the creature is inside.
+			
+			Before you reach the door, a low, guttural growl freezes you in place. The monster emerges, hunched and bristling with unnatural rage.
+			
+			Its voice, a rasp of human words twisted by its transformation, chills you to the bone: “You will die here.” 
+			In its yellowed eyes, you see a flicker of humanity - a soul begging to be freed. 
+			You draw your weapon.
+			
+			- Battle : Battle</tw-passagedata><tw-passagedata pid="4" name="Battle" tags="" position="700,300" size="100,100">Your health is [health] and you have [potions] potions. Weapon damage is [damage]. Monster health is [monster.health].
+			
+			
+			
+			[if  potions &gt; 0]
+			- Fast strike : hit = fast
+			- Heavy strike       
+			- Drink potion : Heal
+			[else]
+			- Fast strike : hit = fast
+			- Heavy strike
+			[end]
+			
+			
+			
+			// Hit result
+			
+			[if hit = fast]
+				[damage roll 30]
+				[monster.health - damage]
+			
+				The strike connects, your blade carving into its thick hide with a spray of black ichor.
+				You hit the beast with [damage] damage.
+			[else]
+				You miss!
+			
+				The beast is quick. It lunges, and your next swing cuts only empty air.
+			[end]
+			
+			
+			// Monster dead
+			
+			[if monster.health &lt; 0]
+				[move Victory]
+			[else]
+				[move Battle]
+			[end]</tw-passagedata><tw-passagedata pid="5" name="Heal" tags="" position="575,500" size="100,100">[potions - 1]
+			[health + 20]
+			
+			You drink healing potion.
+			
+			[move Battle]</tw-passagedata><tw-passagedata pid="6" name="Victory" tags="" position="800,500" size="100,100">Breathing heavily, you steady your hand for the final blow. With a precise strike, you pierce its chest. 
+			
+			The monster lets out a piercing howl, crumbling to the ground as the light in its eyes dims. The abomination is no more.
+			You slay the beast!
+			
+			[move Inside Chirch]</tw-passagedata><tw-passagedata pid="7" name="Inside Chirch" tags="" position="1000,500" size="100,100">The church’s silence presses in as you step inside. Dust hangs in the air, thick with rot. Though the monster lies dead outside, something still pulls at your instincts - unfinished.
+			
+			The altar is broken, holy symbols defaced with strange carvings that seem to shift under your gaze. A faint rustling draws your ear - below.
+			
+			You find a trapdoor beneath a shattered pew and descend into the dark. The crypt beneath is lit by flickering, sickly light. Tombs lie open, their contents disturbed.
+			
+			A hooded figure stands at the center, its back to you. When it turns, its eyes glow faintly, and its voice is a whisper soaked in malice: “You shouldn’t have come here.”
+			
+			The earth shifts. Skeletal hands claw out of the ground. You cut down the first, but more rise. The figure begins to chant, red light pulsing from the symbols carved into its flesh.
+			
+			This wasn’t just a monster. It was the beginning of something far worse.
+			
+			With a battle cry, you charge toward the figure, determined to end this dark chapter before it begins.</tw-passagedata><tw-passagedata pid="8" name="Settings" tags="" position="100,100" size="100,100">&lt;h2&gt;Settings&lt;/h2&gt;
+			
+			Settings screen used to show various information.</tw-passagedata></tw-storydata>
+
+			<transition></transition>
+			<page>
+			<settings></settings>
+			<close></close><open></open>
+			<header>
+				<chapter>Chapter</chapter>
+			</header>
+			<imagebox></imagebox>
+			<textbox></textbox>
+			<action>
+				<dialogue></dialogue>
+				<button></button>
+			</action>
+			</page>
+		</body>
+
+	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+	<script type="text/javascript" src="novel.js"></script>
+</html>
