@@ -40,8 +40,8 @@ class App {
 		// Macro to build Twine `format.js` in `dist` folder
 		BuildFormat.run();
 		
-		Library.parseSpeaker = true;
-		Logic.random = new Dice();
+		var dice = new Dice();
+		harrow.Random.dice = dice.roll;
 
 		var storydata = document.querySelector('tw-storydata');
 
@@ -155,8 +155,6 @@ class App {
 			choice.setAttribute("role", "button");
 			choice.innerHTML = format(entry.text);
 
-			if (entry.role != "empty") choice.id = entry.role;
-
 			var allowed = entry.mode == "empty" ? true : Logic.condition(entry.mode);
 			if (!allowed) choice.className = "disabled";
 			
@@ -188,7 +186,6 @@ class App {
 				folder = data;
 			case "scene": 
 				sceneEvent(data);
-				novel.nextPage();
 			case "image": 
 				imageEvent(data);
 			default:
@@ -293,7 +290,7 @@ class App {
 
 
 	// Transition
-	function onTransition() {
+	function onTransition(name:String) {
 		function hide() {
 			var transition = document.querySelector('transition');
 			transition.style.zIndex = "-1";

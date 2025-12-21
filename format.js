@@ -1,7 +1,7 @@
 window.storyFormat({
 	name: "Harrow",
-	version: "1.0.0",
-	description: "Harrow narrative format. See its <a href='https://github.com/nayata' target='_blank'>documentation</a>.",
+	version: "1.2.0",
+	description: "Harrow narrative format. See its <a href='https://github.com/nayata/harrow' target='_blank'>documentation</a>.",
 	author: "Nayata",
 	proofing: false,
 	source: "{{SOURCE}}",
@@ -19,7 +19,7 @@ window.storyFormat({
 							editor.focus();
 						},
 						insertTransition(editor) {
-							editor.replaceSelection('[transition]');
+							editor.replaceSelection('[transition name]');
 							editor.focus();
 						},
 						insertWait(editor) {
