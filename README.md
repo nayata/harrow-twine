@@ -35,11 +35,11 @@ https://nayata.github.io/format/format.js
 
 ## Getting Started
 
-Harrow doesn't require choosing one way of organizing your story over the other - you can write it either way. Some authors prefer keeping the traditional Twine structure, with each route living in its own linked passage; others prefer writing the whole flow - or large chunks of it - inside a single passage, using named routes (`# RouteName`) as internal anchors instead of separate passages. Both approaches use the same Harrow syntax and behave identically at runtime; it's purely a matter of how you like to organize your work in the editor.
+## Getting Started
 
-The example below uses the single-passage style, since it's the more compact way to show the full flow in one place - but everything in it works the same if split across multiple linked Twine passages instead.
+Harrow stories can be organized either the traditional Twine way - one route per passage, linked together - or written as a single continuous script within one passage, using named routes (`# RouteName`) to structure branching internally. Both approaches are valid; the example below uses a single passage for simplicity.
 
-Create a new passage, set it as your story's starting passage, and paste in the following:
+Create a new passage `Start`, set it as the story's starting passage, and paste in the following:
 
 ```harrow
 [player = Arthur]
