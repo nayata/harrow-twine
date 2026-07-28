@@ -63,9 +63,12 @@ Among the broken stones, you discover a rusty key.
 # Door
 [if has.key == true]
     You unlock the ancient door.
+
     [gold + 25]
+
     Inside the fortress you find an old treasure chest.
     You now have [gold] gold.
+
     [move Victory]
 [else]
     The door is locked.
@@ -223,9 +226,9 @@ Set once, typically near the top of the story, before any content is shown:
 [config.assets.folder images/]
 ```
 
-`config.parse.speaker` *true/false* - whether `Name: text` lines render the name inline as prose instead of as a styled speaker tag
-`config.text.fill` Percentage of textbox height that triggers a page break (lower = shorter pages)
-`config.dialogue.vertical` Choice count above which dialogue switches to a horizontal layout
-`config.settings.title` The title shown at the top of the Settings screen
-`config.text.end` Text shown when the story ends or `[close]` is used
-`config.assets.folder` Base path used by `[image ...]`
+* **config.parse.speaker** - *true/false* - whether `Name: text` lines render the name inline as prose instead of as a styled speaker tag
+* `config.text.fill` Percentage of textbox height that triggers a page break (lower = shorter pages)
+* `config.dialogue.vertical` Choice count above which dialogue switches to a horizontal layout
+* `config.settings.title` The title shown at the top of the Settings screen
+* `config.text.end` Text shown when the story ends or `[close]` is used
+* `config.assets.folder` Base path used by `[image ...]`
