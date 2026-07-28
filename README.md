@@ -29,7 +29,7 @@ https://nayata.github.io/format/format.js
 
 ## Documentation
 
-- [Writing.md](https://github.com/nayata/harrow/blob/main/Documentation/Writing.md) - the core Harrow scripting syntax (routes, dialogue, variables, conditions)
+- [Writing](https://github.com/nayata/harrow/blob/main/Documentation/Writing.md) - the core Harrow scripting syntax (routes, dialogue, variables, conditions)
 - Twine-specific commands (scenes, stat bars, images, settings) are documented separately below, as they exist only in this Twine integration and are not part of the core Harrow language.
 
 
@@ -88,19 +88,19 @@ Playing this story, a reader would:
 
 ## Twine-Specific Commands
 
-These commands exist only in this Twine integration — they are not part of the core Harrow language, and won't work with `harrow.Runtime` used outside this format. Core syntax (routes, dialogue, `if`/`else`, variables) is documented in Harrow's own [Writing.md](https://github.com/nayata/harrow/blob/main/Documentation/Writing.md).
+These commands exist only in this Twine integration - they are not part of the core Harrow language, and won't work with `harrow.Runtime` used outside this format. Core syntax (routes, dialogue, `if`/`else`, variables) is documented in Harrow's own [Writing](https://github.com/nayata/harrow/blob/main/Documentation/Writing.md).
 
 
 ### Scenes
 
 `[scene RouteName]` jumps to the given route and remembers the current position on an internal stack. `[scene close]` returns to wherever the last open scene was called from. `[scene clear]` empties the whole stack.
 
-Scenes stack, so they can be nested arbitrarily deep — for example, opening a quest screen, then a dungeon screen from within it, then a battle screen from within that, and closing each one in turn back to where it was opened
+Scenes stack, so they can be nested arbitrarily deep - for example, opening a quest screen, then a dungeon screen from within it, then a battle screen from within that, and closing each one in turn back to where it was opened
 
 
 ### Bookmark & Return
 
-`[bookmark]` remembers the current position as a single return point (unlike scenes, this is a single slot, not a stack — setting a new bookmark overwrites the previous one). `[return]` jumps back to it. `[bookmark clear]` clears it.
+`[bookmark]` remembers the current position as a single return point (unlike scenes, this is a single slot, not a stack - setting a new bookmark overwrites the previous one). `[return]` jumps back to it. `[bookmark clear]` clears it.
 
 A dialogue choice can also target `return` directly instead of a route name:
 
@@ -127,9 +127,9 @@ Base Damage: [damage]
 
 ### Images and HTML
 
-`[image filename.jpg]` displays an image and reveals the image box. The path is resolved relative to the configured assets folder (`config.assets.folder`) — so a bare filename like `filename.jpg` loads from that folder, while a full URL (`https://example.com/image.jpg`) loads directly from the internet. `[image show]` / `[image hide]` toggle the image box's visibility without changing its content.
+`[image filename.jpg]` displays an image and reveals the image box. The path is resolved relative to the configured assets folder (`config.assets.folder`) - so a bare filename like `filename.jpg` loads from that folder, while a full URL (`https://example.com/image.jpg`) loads directly from the internet. `[image show]` / `[image hide]` toggle the image box's visibility without changing its content.
 
-Raw HTML can also be used directly in text lines — including `<img>` tags for inline images, or formatting tags such as `<h2>`, `<span>`, and similar:
+Raw HTML can also be used directly in text lines - including `<img>` tags for inline images, or formatting tags such as `<h2>`, `<span>`, and similar:
 
 ```
 <h2>Chapter One</h2>
@@ -147,7 +147,7 @@ The party studies the map before setting out.
 - `[bar name]` renders a labeled bar showing `name` against `name.total` (e.g. current/max health).
 - `[dice name]` renders a die face with the current value of `name`.
 
-All three read directly from story variables — nothing needs to be declared beyond the variable itself (and `name.total` for `[bar]`).
+All three read directly from story variables - nothing needs to be declared beyond the variable itself (and `name.total` for `[bar]`).
 
 ```
 Your character's stats.
@@ -169,28 +169,28 @@ Updates the chapter heading shown in the story header.
 
 ### Inline Images in Text
 
-Regular text lines may contain raw `<img src="https://...">` (or `http://`) tags directly — the format detects and repairs this specific case so the URL's `:` isn't mistaken for a speaker-name separator. No special escaping is needed beyond writing the tag as normal HTML.
+Regular text lines may contain raw `<img src="https://...">` (or `http://`) tags directly - the format detects and repairs this specific case so the URL's `:` isn't mistaken for a speaker-name separator. No special escaping is needed beyond writing the tag as normal HTML.
 
 
 ### Built-in Settings Screen
 
 The Settings screen (opened via the header's settings icon) includes, by default:
 
-- **Font Size** — cycles between Default, Large, and Small; affects the story textbox only.
-- **Font Family** — cycles between the page's default font and a serif alternative; applies to the whole page (`body`), not just the textbox.
-- **Theme** — cycles between Light and Dark.
-- **Restart the Game** — reloads the story from the beginning.
-- **Return** — closes the Settings screen and resumes the story.
+- **Font Size** - cycles between Default, Large, and Small; affects the story textbox only.
+- **Font Family** - cycles between the page's default font and a serif alternative; applies to the whole page (`body`), not just the textbox.
+- **Theme** - cycles between Light and Dark.
+- **Restart the Game** - reloads the story from the beginning.
+- **Return** - closes the Settings screen and resumes the story.
 
-The header text at the top of the Settings panel comes from `config.settings.title` (see [Configuration](#configuration) above) — it wraps the whole panel, independent of whichever tab is currently open.
+The header text at the top of the Settings panel comes from `config.settings.title` (see [Configuration](#configuration) above) - it wraps the whole panel, independent of whichever tab is currently open.
 
 #### Adding Content Tabs
 
-The **Settings** screen can show additional read-only tabs alongside the default one — useful for a character sheet, journal, inventory summary, or any other reference screen the player can check without leaving the current scene.
+The **Settings** screen can show additional read-only tabs alongside the default one - useful for a character sheet, journal, inventory summary, or any other reference screen the player can check without leaving the current scene.
 
 To add a tab, tag a passage `menu` in the Twine editor:
 
-Tag the `Character` passage with `menu`, and a **Character** tab appears in Settings, showing the rendered content of the `# Character` route. Any number of passages can be tagged this way — each becomes its own tab, in the order they appear in the story file. If at least one `menu`-tagged passage exists, the built-in font/theme/restart screen becomes its own **Settings** tab alongside them, rather than being the only thing shown; if none exist, it's shown directly with no tabs at all.
+Tag the `Character` passage with `menu`, and a **Character** tab appears in Settings, showing the rendered content of the `# Character` route. Any number of passages can be tagged this way - each becomes its own tab, in the order they appear in the story file. If at least one `menu`-tagged passage exists, the built-in font/theme/restart screen becomes its own **Settings** tab alongside them, rather than being the only thing shown; if none exist, it's shown directly with no tabs at all.
 
 ```
 **Character**
@@ -200,12 +200,12 @@ Gold: [gold]
 [stat courage]
 ```
 
-Tab content supports `[if]`/`[else]`/`[end]` (including nested conditions), regular text, and `[stat]`/`[bar]` — the same rendering used during normal play. It does **not** execute variable assignments (`=`, `+`, `roll`, and so on) — opening a tab is a read-only snapshot of the current game state, so viewing it never changes any variables.
+Tab content supports `[if]`/`[else]`/`[end]` (including nested conditions), regular text, and `[stat]`/`[bar]` - the same rendering used during normal play. It does **not** execute variable assignments (`=`, `+`, `roll`, and so on) - opening a tab is a read-only snapshot of the current game state, so viewing it never changes any variables.
 
 
 ### Speaker Parsing & Escaping
 
-When `config.parse.speaker` is `true`, a text line written as `Name: text` has `Name` wrapped in an invisible `<span class="speaker">` — hidden by default, but can be made visible and styled through custom CSS (for example, giving `speaker` a `display` and font/color rules of your own). When `config.parse.speaker` is `false`, no span is inserted; the speaker name is instead written directly into the visible text as a plain `Name: ` prefix.
+When `config.parse.speaker` is `true`, a text line written as `Name: text` has `Name` wrapped in an invisible `<span class="speaker">` - hidden by default, but can be made visible and styled through custom CSS (for example, giving `speaker` a `display` and font/color rules of your own). When `config.parse.speaker` is `false`, no span is inserted; the speaker name is instead written directly into the visible text as a plain `Name: ` prefix.
 
 Because a leading `:` on a text line is what marks a speaker name, a line that needs a literal colon without triggering this split should escape it with a backslash: `\:`.
 
@@ -223,7 +223,7 @@ Set once, typically near the top of the story, before any content is shown:
 [config.assets.folder images/]
 ```
 
-`config.parse.speaker` *true/false* — whether `Name: text` lines render the name inline as prose instead of as a styled speaker tag
+`config.parse.speaker` *true/false* - whether `Name: text` lines render the name inline as prose instead of as a styled speaker tag
 `config.text.fill` Percentage of textbox height that triggers a page break (lower = shorter pages)
 `config.dialogue.vertical` Choice count above which dialogue switches to a horizontal layout
 `config.settings.title` The title shown at the top of the Settings screen
