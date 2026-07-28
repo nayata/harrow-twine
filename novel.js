@@ -7,14 +7,12 @@ function $extend(from, fields) {
 	return proto;
 }
 var App = $hx_exports["App"] = function() {
-	this.folder = "";
-	this.buffer = "";
-	this.maxlenght = 240;
-	this.parsespeaker = false;
-	this.bookmark = [];
+	this.bookmark = -1;
+	this.location = [];
 	var _gthis = this;
-	var dice = new Dice();
-	harrow_Random.dice = $bind(dice,dice.roll);
+	this.buffer = new Buffer();
+	harrow_Syntax.custom = $bind(this,this.customSyntax);
+	harrow_Random.dice = Dice.roll;
 	var storydata = window.document.querySelector("tw-storydata");
 	this.story = Parser.get(storydata);
 	this.novel = new harrow_Runtime(this.story);
@@ -22,83 +20,137 @@ var App = $hx_exports["App"] = function() {
 	this.novel.onDialogue = $bind(this,this.onDialogue);
 	this.novel.onTransition = $bind(this,this.onTransition);
 	this.novel.onEvent = $bind(this,this.onEvent);
+	this.novel.onClose = $bind(this,this.onEnd);
 	this.novel.onEnd = $bind(this,this.onEnd);
-	this.textbox = window.document.querySelector("textbox");
+	this.cover = window.document.querySelector("cover");
+	this.start = window.document.querySelector("start");
+	this.transition = window.document.querySelector("transition");
+	this.imagebox = window.document.querySelector("imagebox");
 	this.dialogue = window.document.querySelector("dialogue");
-	this.button = window.document.querySelector("button");
+	this.textbox = window.document.querySelector("textbox");
+	this.button = window.document.querySelector("continue");
 	this.button.textContent = "Continue";
+	this.button.setAttribute("role","button");
 	this.button.style.display = "none";
 	this.button.onclick = function(event) {
 		_gthis.onClick();
 	};
 	window.document.querySelector("chapter").innerHTML = storydata.getAttribute("name");
-	window.document.querySelector("close").onclick = function(event) {
-		_gthis.close();
-	};
-	window.document.querySelector("open").onclick = function(event) {
-		_gthis.open("Settings");
-	};
 	var style = window.document.createElement("style");
 	style.innerHTML = window.document.querySelector("#twine-user-stylesheet").innerHTML;
 	window.document.querySelector("body").appendChild(style);
 	var script = window.document.createElement("script");
 	script.innerHTML = window.document.querySelector("#twine-user-script").innerHTML;
 	window.document.querySelector("body").appendChild(script);
-	this.novel.nextPage();
+	var passage = window.document.querySelector("tw-passagedata[name=\"StoryAuthor\"]");
+	var tmp = passage != null ? passage.innerHTML : "Story by Author";
+	window.document.querySelector("author").innerHTML = tmp;
+	window.document.querySelector("name").innerHTML = storydata.getAttribute("name");
+	this.settings = new Settings(this.story,storydata);
+	window.document.querySelector("close").onclick = function(event) {
+		_gthis.settings.close();
+	};
+	window.document.querySelector("open").onclick = function(event) {
+		_gthis.settings.open();
+	};
+	window.document.querySelector("page").id = "title";
+	this.start.onclick = function(event) {
+		window.document.querySelector("page").removeAttribute("id");
+		_gthis.novel.nextPage();
+	};
 };
 App.__name__ = true;
 App.main = function() {
 	App.ME = new App();
 };
+App.fade = function(element,duration,from,to) {
+	if(to == null) {
+		to = 1;
+	}
+	if(from == null) {
+		from = 0;
+	}
+	if(duration == null) {
+		duration = 300;
+	}
+	element.style.transition = "none";
+	element.style.opacity = from == null ? "null" : "" + from;
+	element.getBoundingClientRect();
+	element.style.transition = "opacity " + duration + "ms";
+	element.style.opacity = to == null ? "null" : "" + to;
+};
 App.prototype = {
 	onClick: function() {
 		this.button.style.display = "none";
+		this.textbox.innerHTML = "";
 		this.novel.nextPage();
 	}
 	,showText: function() {
-		this.textbox.innerHTML = this.buffer;
-		this.buffer = "";
-		this.textbox.style.opacity = "0";
-		$(this.textbox).fadeTo(300,1);
+		this.button.style.display = "block";
+		App.fade(this.textbox);
 	}
 	,onText: function(text,name) {
 		var speaker = name != "" ? "<span class = \"speaker\">" + name + "</span>" : "";
 		var element = name != "" ? "<p class = \"" + name + "\">" : "<p>";
-		if(!this.parsespeaker && name != "") {
+		if(!Config.speaker && name != "") {
 			speaker = name + ": ";
 		}
-		this.buffer = this.buffer + element + speaker + this.decode(text) + "</p>";
-		var ready = this.buffer.length > this.maxlenght;
-		var page = this.novel.story.look(this.novel.story.page + 1);
-		var last = page == null;
+		this.textbox.innerHTML += this.buffer.get();
+		if(this.currentFillRatio() > Config.maxHeight) {
+			this.buffer.set(element + speaker + text + "</p>");
+			this.showText();
+			return;
+		}
+		this.textbox.innerHTML += element + speaker + text + "</p>";
+		var full = this.currentFillRatio() > Config.maxHeight;
+		var next = this.novel.story.look(this.novel.story.page + 1);
+		var last = next == null;
 		if(last) {
-			this.button.style.display = "block";
 			this.showText();
 		}
 		if(last) {
 			return;
 		}
-		if(page.type == "dialogue" && ready) {
+		if(full && next.type == "dialogue") {
 			this.novel.nextPage();
 		}
-		if(page.type != "dialogue" && ready) {
-			this.button.style.display = "block";
+		if(full && next.type != "dialogue") {
 			this.showText();
 		}
-		if(ready) {
+		if(full) {
 			return;
 		}
-		if(page.type == "text" || page.type == "dialogue") {
+		var allowed = next.type == "text" || next.type == "dialogue" || next.type == "event";
+		if(next.type == "event") {
+			if(next.data == "return") {
+				allowed = false;
+			}
+			if(next.data == "scene") {
+				allowed = false;
+			}
+		}
+		if(allowed) {
 			this.novel.nextPage();
-		} else {
-			this.button.style.display = "block";
+		}
+		if(!allowed) {
 			this.showText();
 		}
 	}
+	,currentFillRatio: function() {
+		var visibleHeight = this.textbox.clientHeight;
+		var last = this.textbox.lastElementChild;
+		var contentHeight = last != null ? last.offsetTop + last.offsetHeight : 0;
+		return Math.min(100,contentHeight / visibleHeight * 100);
+	}
 	,onDialogue: function(choices) {
 		var _gthis = this;
-		if(this.buffer.length > 0) {
-			this.showText();
+		if(this.buffer.full()) {
+			this.textbox.innerHTML = this.buffer.get();
+		}
+		App.fade(this.textbox);
+		this.dialogue.removeAttribute("id");
+		if(choices.length > Config.maxVertical) {
+			this.dialogue.id = "horizontal";
 		}
 		var _g = 0;
 		while(_g < choices.length) {
@@ -106,7 +158,7 @@ App.prototype = {
 			++_g;
 			var choice = window.document.createElement("choice");
 			choice.setAttribute("role","button");
-			choice.innerHTML = this.format(entry[0].text);
+			choice.innerHTML = harrow_Format.variable(entry[0].text);
 			var allowed = entry[0].mode == "empty" ? true : harrow_Logic.condition(entry[0].mode);
 			if(!allowed) {
 				choice.className = "disabled";
@@ -122,271 +174,182 @@ App.prototype = {
 	,onSelect: function(type,data) {
 		this.dialogue.innerHTML = "";
 		this.textbox.innerHTML = "";
-		this.novel.onChoice(type,data);
+		if(type == "route" && data != "return") {
+			this.story.move(data);
+		}
+		if(data == "return" && this.bookmark != -1) {
+			this.story.turn(this.bookmark);
+		}
+		if(type == "variable") {
+			harrow_Logic.variable(data);
+		}
+		this.novel.nextPage();
 	}
 	,onEvent: function(type,data) {
 		switch(type) {
+		case "bar":
+			this.buffer.set(Render.bar(data));
+			break;
+		case "bookmark":
+			this.bookmark = data == "clear" ? -1 : this.story.page - 1;
+			break;
 		case "config.assets.folder":
-			this.folder = data;
+			Config.folder = data;
+			break;
+		case "config.dialogue.vertical":
+			Config.maxVertical = Std.parseInt(data);
 			break;
 		case "config.parse.speaker":
-			this.parsespeaker = data == "true";
+			Config.speaker = data == "true";
 			break;
-		case "config.text.maxlenght":
-			this.maxlenght = Std.parseInt(data);
+		case "config.settings.title":
+			Config.settings = data;
+			break;
+		case "config.text.end":
+			Config.endText = data;
+			break;
+		case "config.text.fill":
+			Config.maxHeight = Std.parseInt(data);
+			break;
+		case "dice":
+			this.buffer.set(Render.dice(data));
 			break;
 		case "image":
 			this.imageEvent(data);
 			break;
+		case "return":
+			if(this.bookmark != -1) {
+				this.story.turn(this.bookmark);
+			}
+			break;
 		case "scene":
 			this.sceneEvent(data);
 			break;
+		case "stat":
+			this.buffer.set(Render.stat(data));
+			break;
 		default:
-			this.screenEvent(type,data);
 		}
 	}
 	,sceneEvent: function(data) {
 		if(data == "close") {
-			var page = this.bookmark.pop();
+			var page = this.location.pop();
 			if(page != null) {
 				this.story.turn(page);
 			}
 		} else if(data == "clear") {
-			this.bookmark = [];
+			this.location = [];
 		} else {
-			this.bookmark.push(this.story.page);
+			this.location.push(this.story.page);
 			this.story.move(data);
 		}
 	}
 	,imageEvent: function(data) {
-		var element = window.document.querySelector("imagebox");
 		if(data == "show") {
 			window.document.querySelector("page").className = "novel";
-			element.style.display = "block";
+			this.imagebox.style.display = "block";
 		} else if(data == "hide") {
 			window.document.querySelector("page").removeAttribute("class");
-			element.style.display = "none";
+			this.imagebox.style.display = "none";
 		} else {
 			window.document.querySelector("page").className = "novel";
-			element.style.display = "block";
-			var tmp = "url('" + this.folder + this.decode(data);
-			element.style.backgroundImage = tmp + "')";
-			element.style.opacity = "0";
-			$(element).fadeTo(300,1);
-		}
-	}
-	,screenEvent: function(name,data) {
-		var entry = data.split(":");
-		var type = entry.shift();
-		var text = entry.join(" ");
-		var element = window.document.querySelector(name);
-		if(element == null) {
-			return;
-		}
-		text = this.decode(text);
-		if(type != null) {
-			switch(type) {
-			case "add":
-				var item = window.document.createElement(text);
-				element.appendChild(item);
-				break;
-			case "after":
-				var item = window.document.createElement(text);
-				element.parentNode.insertBefore(item,element.nextSibling);
-				break;
-			case "append":
-				element.innerHTML += this.format(text);
-				break;
-			case "before":
-				var item = window.document.createElement(text);
-				element.parentNode.insertBefore(item,element);
-				break;
-			case "class":
-				element.setAttribute("class",text);
-				if(text == "default") {
-					element.removeAttribute("class");
-				}
-				break;
-			case "css":
-				var position = text.indexOf(" ");
-				var prop = text.substring(0,position);
-				var data = text.substring(position + 1,text.length);
-				element.style.setProperty(prop,data);
-				break;
-			case "hide":
-				element.style.display = "none";
-				break;
-			case "html":
-				element.innerHTML = text == "empty" ? "" : this.format(text);
-				break;
-			case "id":
-				element.setAttribute("id",text);
-				if(text == "default") {
-					element.removeAttribute("id");
-				}
-				break;
-			case "image":
-				element.style.backgroundImage = "url('" + this.folder + text + "')";
-				element.style.opacity = "0";
-				$(element).fadeTo(300,1);
-				break;
-			case "onclick":
-				element.setAttribute("onclick",this.format(text));
-				break;
-			case "remove":
-				element.parentNode.removeChild(element);
-				break;
-			case "show":
-				element.style.display = "block";
-				break;
-			case "text":
-				element.textContent = text == "empty" ? "" : this.format(text);
-				break;
-			default:
-			}
+			this.imagebox.style.backgroundImage = "url('" + Config.folder + data + "')";
+			this.imagebox.style.display = "block";
+			App.fade(this.imagebox);
 		}
 	}
 	,onTransition: function(name) {
 		var _gthis = this;
 		var hide = function() {
-			var transition = window.document.querySelector("transition");
-			transition.style.zIndex = "-1";
+			_gthis.transition.style.zIndex = "-1";
 		};
 		var fade = function() {
-			var transition = window.document.querySelector("transition");
-			transition.className = "off";
+			_gthis.transition.className = "hidden";
 			haxe_Timer.delay(hide,600);
 			_gthis.novel.nextPage();
 		};
-		var transition = window.document.querySelector("transition");
-		transition.style.zIndex = "600";
-		transition.className = "active";
+		this.transition.style.zIndex = "600";
+		this.transition.className = "active";
 		haxe_Timer.delay(fade,900);
 	}
 	,onEnd: function() {
-		this.textbox.innerHTML = "<p>Story End.</p>";
-		$(this.textbox).fadeTo(300,1);
+		this.buffer.clear();
+		this.textbox.innerHTML = Config.endText;
+		App.fade(this.textbox);
+		this.button.textContent = "Restart";
+		this.button.style.display = "block";
+		this.button.onclick = function(event) {
+			window.location.reload();
+		};
 	}
-	,open: function(name) {
-		var page = this.story.find("route",name);
-		if(page == null) {
-			return;
-		}
-		var skip = false;
-		var string = "";
-		++page;
-		var _g = page;
-		var _g1 = this.story.data.length;
-		while(_g < _g1) {
-			var i = _g++;
-			if(this.story.data[i].type == "route") {
-				break;
-			}
-			if(this.story.data[i].type == "condition") {
-				if(skip && this.story.data[i].text == "else" || skip && this.story.data[i].text == "end") {
-					skip = false;
-				} else {
-					skip = !harrow_Logic.condition(this.story.data[i].text);
-				}
-			}
-			if(skip) {
-				continue;
-			}
-			if(this.story.data[i].type == "text") {
-				var speaker = this.story.data[i].data;
-				var element = speaker != "" ? "<p class = \"" + speaker + "\">" : "<p>";
-				string = string + element + this.story.data[i].text + "</p>";
-			}
-			if(this.story.data[i].type == "event") {
-				var element1 = StringTools.replace(this.story.data[i].text,":"," ");
-				element1 = this.story.data[i].data + " " + this.decode(element1);
-				element1 = this.format(element1);
-				string += element1;
+	,customSyntax: function(page,entry) {
+		if(page.type == "text") {
+			if(page.data == "<img src=\"https" || page.data == "<img src=\"http") {
+				page.text = page.data + ":" + page.text;
+				page.data = "";
 			}
 		}
-		window.document.querySelector("close").style.zIndex = "400";
-		var element = window.document.querySelector("settings");
-		element.innerHTML = "<content>" + string + "</content>";
-		element.setAttribute("class",name.toLowerCase());
-		element.style.display = "grid";
-		element.style.zIndex = "300";
-		element.style.opacity = "1";
-	}
-	,close: function() {
-		window.document.querySelector("close").style.zIndex = "-1";
-		var element = window.document.querySelector("settings");
-		element.removeAttribute("class");
-		element.style.display = "none";
-		element.style.opacity = "0";
-		element.style.zIndex = "-1";
-	}
-	,get: function(key) {
-		return harrow_Storage.get(key);
-	}
-	,set: function(key,value) {
-		harrow_Storage.set(key,value);
-	}
-	,decode: function(entry) {
-		entry = StringTools.replace(entry,"https ","https:");
-		entry = StringTools.replace(entry,"http ","http:");
-		return entry;
-	}
-	,format: function(entry) {
-		if(entry.indexOf("$") == -1) {
-			return entry;
-		}
-		var rex = new EReg("\\$\\S+?(?=[^a-zA-Z.]|$)","g");
-		entry = rex.map(entry,function(r) {
-			var matching = r.matched(0);
-			var variable = matching.substring(1,matching.length);
-			if(harrow_Storage.has(variable)) {
-				return harrow_Storage.get(variable);
-			}
-			return matching;
-		});
-		return entry;
 	}
 };
-var Dice = function() {
+var Buffer = function() {
+	this.content = "";
 };
+Buffer.__name__ = true;
+Buffer.prototype = {
+	full: function() {
+		return this.content.length > 0;
+	}
+	,get: function() {
+		var result = this.content;
+		this.content = "";
+		return result;
+	}
+	,set: function(text) {
+		this.content += text;
+	}
+	,clear: function() {
+		this.content = "";
+	}
+};
+var Config = function() { };
+Config.__name__ = true;
+var Dice = function() { };
 Dice.__name__ = true;
-Dice.prototype = {
-	roll: function(entry) {
-		var text = entry.toLowerCase();
-		var keys = text.split("d");
-		if(keys.length == 1) {
-			return this.rollDice(1,Std.parseInt(text));
-		}
-		var pool = Std.parseInt(keys.shift());
-		var side = keys.shift();
-		var type = side.charAt(side.length - 1);
-		if(type == "h" || type == "l") {
-			side = side.substring(0,side.length - 1);
-		}
-		var rolls = [];
-		var total = 0;
-		var _g = 0;
-		var _g1 = pool;
-		while(_g < _g1) {
-			var i = _g++;
-			var take = this.rollDice(1,Std.parseInt(side));
-			total += take;
-			rolls.push(take);
-		}
-		rolls.sort(function(a,b) {
-			return a - b;
-		});
-		if(type == "l") {
-			return rolls.shift();
-		}
-		if(type == "h") {
-			return rolls.pop();
-		}
-		return total;
+Dice.roll = function(entry) {
+	var text = entry.toLowerCase();
+	var keys = text.split("d");
+	if(keys.length == 1) {
+		return Dice.random(1,Std.parseInt(text));
 	}
-	,rollDice: function(min,max) {
-		return min + Math.floor((max - min + 1) * Math.random());
+	var pool = Std.parseInt(keys.shift());
+	var side = keys.shift();
+	var type = side.charAt(side.length - 1);
+	if(type == "h" || type == "l") {
+		side = side.substring(0,side.length - 1);
 	}
+	var rolls = [];
+	var total = 0;
+	var _g = 0;
+	var _g1 = pool;
+	while(_g < _g1) {
+		var i = _g++;
+		var take = Dice.random(1,Std.parseInt(side));
+		total += take;
+		rolls.push(take);
+	}
+	rolls.sort(function(a,b) {
+		return a - b;
+	});
+	if(type == "l") {
+		return rolls.shift();
+	}
+	if(type == "h") {
+		return rolls.pop();
+	}
+	return total;
+};
+Dice.random = function(min,max) {
+	return min + Math.floor((max - min + 1) * Math.random());
 };
 var EReg = function(r,opt) {
 	this.r = new RegExp(r,opt.split("u").join(""));
@@ -531,6 +494,249 @@ Parser.get = function(storydata) {
 	story.move(start);
 	return story;
 };
+var Render = function() { };
+Render.__name__ = true;
+Render.dice = function(name) {
+	var value = parseFloat(harrow_Storage.get(name));
+	if(isNaN(value)) {
+		return "";
+	}
+	return "<dice><face></face><value>" + value + "</value></dice>";
+};
+Render.stat = function(name) {
+	var value = parseFloat(harrow_Storage.get(name));
+	if(isNaN(value)) {
+		return "";
+	}
+	var upper = name.charAt(0).toUpperCase() + HxOverrides.substr(name,1,null);
+	var label = upper.split(".").shift();
+	return "<stat><bar><fill style=\"width:" + value + "%\"></fill></bar><label>" + label + ": " + value + "%</label></stat>";
+};
+Render.bar = function(name) {
+	var upper = name.charAt(0).toUpperCase() + HxOverrides.substr(name,1,null);
+	var label = upper.split(".").shift();
+	var value = parseFloat(harrow_Storage.get(name));
+	var total = parseFloat(harrow_Storage.get(name + ".max"));
+	if(isNaN(value)) {
+		return "";
+	}
+	if(isNaN(total) || total <= 0) {
+		total = 100;
+	}
+	var percent = value / total * 100;
+	return "<stat><bar><fill style=\"width:" + percent + "%\"></fill></bar><label>" + label + ": " + value + "/" + total + "</label></stat>";
+};
+var Settings = function(entry,data) {
+	this.themeIndex = 0;
+	this.themeValues = ["light","dark"];
+	this.themeNames = ["Light","Dark"];
+	this.fontFamilyIndex = 0;
+	this.fontFamilyValues = ["sans-serif","serif"];
+	this.fontFamilyNames = ["Default","Serif"];
+	this.fontSizeIndex = 0;
+	this.fontSizeValues = ["1em","1.3em","0.85em"];
+	this.fontSizeNames = ["Default","Large","Small"];
+	this.list = [];
+	this.story = entry;
+	this.fontFamilyValues[0] = window.getComputedStyle(window.document.body).fontFamily;
+	var _g = 0;
+	var _g1 = data.children;
+	while(_g < _g1.length) {
+		var passage = _g1[_g];
+		++_g;
+		var tags = passage.getAttribute("tags");
+		if(tags == "menu") {
+			this.list.push(passage.getAttribute("name"));
+		}
+	}
+	if(this.list.length > 0) {
+		this.list.push("Settings");
+	}
+	this.settings = window.document.querySelector("settings");
+	this.textbox = window.document.querySelector("textbox");
+};
+Settings.__name__ = true;
+Settings.prototype = {
+	changeFontSize: function() {
+		this.fontSizeIndex = (this.fontSizeIndex + 1) % this.fontSizeNames.length;
+		this.textbox.style.fontSize = this.fontSizeValues[this.fontSizeIndex];
+		this.updateSettingsLabels();
+	}
+	,changeFontFamily: function() {
+		this.fontFamilyIndex = (this.fontFamilyIndex + 1) % this.fontFamilyNames.length;
+		window.document.body.style.fontFamily = this.fontFamilyValues[this.fontFamilyIndex];
+		this.updateSettingsLabels();
+	}
+	,changeTheme: function() {
+		this.themeIndex = (this.themeIndex + 1) % this.themeNames.length;
+		window.document.documentElement.setAttribute("data-theme",this.themeValues[this.themeIndex]);
+		this.updateSettingsLabels();
+	}
+	,updateSettingsLabels: function() {
+		this.sizeLabel.textContent = "Font Size: " + this.fontSizeNames[this.fontSizeIndex];
+		this.familyLabel.textContent = "Font Family: " + this.fontFamilyNames[this.fontFamilyIndex];
+		this.themeLabel.textContent = "Theme: " + this.themeNames[this.themeIndex];
+	}
+	,open: function() {
+		var _gthis = this;
+		window.document.querySelector("close").style.zIndex = "400";
+		this.settings.innerHTML = "<header>" + Config.settings + "</header>";
+		var menu = window.document.createElement("navigation");
+		this.settings.appendChild(menu);
+		var text = window.document.createElement("textbox");
+		text.className = "information";
+		this.settings.appendChild(text);
+		var tabs = [];
+		var _g = 0;
+		var _g1 = this.list;
+		while(_g < _g1.length) {
+			var entry = [_g1[_g]];
+			++_g;
+			var tab = [window.document.createElement("div")];
+			tab[0].className = "tab";
+			tab[0].innerHTML = entry[0];
+			tabs.push(tab[0]);
+			tab[0].onclick = (function(tab,entry) {
+				return function(event) {
+					if(entry[0] == "Settings") {
+						_gthis.getDefault(text);
+					}
+					if(entry[0] != "Settings") {
+						text.innerHTML = _gthis.getRoute(entry[0]);
+					}
+					var _g = 0;
+					while(_g < tabs.length) {
+						var t = tabs[_g];
+						++_g;
+						t.className = "tab";
+					}
+					tab[0].className = "tab active";
+				};
+			})(tab,entry);
+			menu.appendChild(tab[0]);
+		}
+		if(this.list.length == 0) {
+			this.getDefault(text);
+		}
+		if(this.list.length != 0) {
+			text.innerHTML = this.getRoute(this.list[0]);
+		}
+		if(tabs.length != 0) {
+			tabs[0].className = "tab active";
+		}
+		this.settings.style.display = "grid";
+		this.settings.style.zIndex = "300";
+		this.settings.style.opacity = "1";
+	}
+	,close: function() {
+		window.document.querySelector("close").style.zIndex = "-1";
+		this.settings.removeAttribute("class");
+		this.settings.style.display = "none";
+		this.settings.style.opacity = "0";
+		this.settings.style.zIndex = "-1";
+	}
+	,getDefault: function(element) {
+		var _gthis = this;
+		element.innerHTML = "";
+		var letter = window.document.createElement("letter");
+		letter.textContent = "A";
+		var status = window.document.createElement("status");
+		this.sizeLabel = window.document.createElement("size");
+		this.sizeLabel.textContent = "Font Size: " + this.fontSizeNames[this.fontSizeIndex];
+		this.sizeLabel.onclick = function(event) {
+			_gthis.changeFontSize();
+		};
+		this.familyLabel = window.document.createElement("family");
+		this.familyLabel.textContent = "Font Family: " + this.fontFamilyNames[this.fontFamilyIndex];
+		this.familyLabel.onclick = function(event) {
+			_gthis.changeFontFamily();
+		};
+		this.themeLabel = window.document.createElement("theme");
+		this.themeLabel.textContent = "Theme: " + this.themeNames[this.themeIndex];
+		this.themeLabel.onclick = function(e) {
+			_gthis.changeTheme();
+		};
+		status.appendChild(this.sizeLabel);
+		status.appendChild(this.familyLabel);
+		status.appendChild(this.themeLabel);
+		var divider = window.document.createElement("divider");
+		var menu = window.document.createElement("menu");
+		var restartItem = window.document.createElement("item");
+		restartItem.textContent = "Restart the Game";
+		restartItem.onclick = function(event) {
+			window.location.reload();
+		};
+		var returnItem = window.document.createElement("item");
+		returnItem.textContent = "Return";
+		returnItem.onclick = function(event) {
+			_gthis.close();
+		};
+		menu.appendChild(restartItem);
+		menu.appendChild(returnItem);
+		element.appendChild(letter);
+		element.appendChild(status);
+		element.appendChild(divider);
+		element.appendChild(menu);
+	}
+	,getRoute: function(name) {
+		var route = this.story.find("route",name);
+		if(route == null) {
+			return "";
+		}
+		var string = "";
+		var hidden = null;
+		var depth = 0;
+		++route;
+		var _g = route;
+		var _g1 = this.story.data.length;
+		while(_g < _g1) {
+			var i = _g++;
+			var page = this.story.data[i];
+			if(page.type == "route") {
+				break;
+			}
+			if(page.type == "condition") {
+				if(page.data == "if") {
+					++depth;
+					if(hidden == null && !harrow_Logic.condition(page.text)) {
+						hidden = depth;
+					}
+				} else if(page.text == "else") {
+					if(hidden == depth) {
+						hidden = null;
+					} else if(hidden == null) {
+						hidden = depth;
+					}
+				} else if(page.text == "end") {
+					if(hidden == depth) {
+						hidden = null;
+					}
+					--depth;
+				}
+			}
+			if(hidden != null) {
+				continue;
+			}
+			if(page.type == "text") {
+				var speaker = page.data != "" ? "<span class=\"speaker\">" + page.data + "</span>" : "";
+				var element = page.data != "" ? "<p class=\"" + page.data + "\">" : "<p>";
+				if(!Config.speaker && page.data != "") {
+					speaker = page.data + ": ";
+				}
+				string = string + element + speaker + harrow_Format.variable(page.text) + "</p>";
+			}
+			if(page.type == "event") {
+				if(page.data == "stat") {
+					string += Render.stat(page.text);
+				}
+				if(page.data == "bar") {
+					string += Render.bar(page.text);
+				}
+			}
+		}
+		return string;
+	}
+};
 var Std = function() { };
 Std.__name__ = true;
 Std.string = function(s) {
@@ -589,13 +795,13 @@ harrow_Choice.__name__ = true;
 var harrow_Dialogue = function() { };
 harrow_Dialogue.__name__ = true;
 harrow_Dialogue.get = function(entry) {
-	var map = entry.split(harrow_Library.LINE);
+	var map = entry.split("|");
 	var choices = [];
 	var _g = 0;
 	var _g1 = map.length;
 	while(_g < _g1) {
 		var i = _g++;
-		var key = map[i].split(harrow_Library.ITEM);
+		var key = map[i].split("::");
 		var choice = new harrow_Choice();
 		choice.text = key[0];
 		choice.type = key[1];
@@ -611,13 +817,14 @@ harrow_Format.variable = function(entry) {
 	if(entry.indexOf("[") == -1) {
 		return entry;
 	}
-	var rex = new EReg("\\[(.*?)\\]","gi");
+	var rex = new EReg("\\[(.*?)\\]","g");
 	entry = rex.map(entry,function(r) {
 		var matching = r.matched(0);
 		var variable = matching.substring(1,matching.length - 1);
 		if(harrow_Storage.has(variable)) {
 			return harrow_Storage.get(variable);
 		}
+		console.log("src/harrow/Format.hx:15:","Warning: variable \"" + variable + "\" is not defined");
 		return matching;
 	});
 	return entry;
@@ -668,62 +875,65 @@ harrow_Library.parse = function(entry) {
 		page.type = "route";
 	}
 	if(leading == "-") {
-		page.type = "dialogue";
+		page.type = harrow_Library.getDialogue(string);
 	}
 	if(leading == "[") {
-		page.type = harrow_Library.isEvent(string);
-	}
-	if(harrow_Library.isBreak(string)) {
-		page.type = "break";
+		page.type = harrow_Library.getEvent(string);
 	}
 	switch(page.type) {
 	case "dialogue":
-		harrow_Library.getDialogue(page,string);
+		harrow_Library.setDialogue(page,string);
 		break;
 	case "event":
-		harrow_Library.getEvent(page,string);
+		harrow_Library.setEvent(page,string);
 		break;
 	case "route":
-		harrow_Library.getRoute(page,string);
+		harrow_Library.setRoute(page,string);
 		break;
 	case "text":
-		harrow_Library.getText(page,string);
+		harrow_Library.setText(page,string);
 		break;
-	default:
 	}
+	harrow_Syntax.custom(page,string);
 	return page;
 };
 harrow_Library.merge = function(page,last) {
 	if(page != null && page.type == "dialogue" && last != null && last.type == "dialogue") {
-		last.text = last.text + harrow_Library.LINE + page.text;
+		last.text = last.text + "|" + page.text;
 		last.data = "dialogue";
 		return true;
 	}
 	return false;
 };
-harrow_Library.getText = function(page,entry) {
-	var raw = StringTools.replace(entry,harrow_Library.colonEscape,harrow_Library.LINE);
-	var key = raw.split(harrow_Library.KEY);
-	page.text = StringTools.trim(key.pop());
-	page.text = StringTools.replace(page.text,harrow_Library.LINE,harrow_Library.KEY);
-	page.data = key.length > 0 ? StringTools.trim(key[harrow_Library.TYPE]) : "";
+harrow_Library.setText = function(page,entry) {
+	var raw = StringTools.replace(entry,harrow_Library.ESCAPE,harrow_Library.DIVIDE);
+	var key = raw.indexOf(":");
+	page.text = key >= 0 ? StringTools.trim(HxOverrides.substr(raw,key + 1,null)) : raw;
+	page.data = key >= 0 ? StringTools.trim(HxOverrides.substr(raw,0,key)) : "";
+	page.text = StringTools.replace(page.text,harrow_Library.DIVIDE,":");
+	var open = page.data.indexOf("<");
+	var close = page.data.indexOf(">");
+	if(open != -1 && close > open) {
+		page.tags = HxOverrides.substr(page.data,open + 1,close - open - 1);
+		page.data = HxOverrides.substr(page.data,0,open);
+	}
 };
-harrow_Library.getRoute = function(page,entry) {
-	var locked = entry.substring(0,2) != harrow_Library.HASH + harrow_Library.HASH;
-	page.text = StringTools.trim(StringTools.replace(entry,harrow_Library.HASH,""));
+harrow_Library.setRoute = function(page,entry) {
+	var locked = entry.substring(0,2) != "#" + "#";
+	page.text = StringTools.trim(StringTools.replace(entry,"#",""));
 	page.data = locked ? "route" : "label";
 };
-harrow_Library.getDialogue = function(page,entry) {
-	var res = StringTools.replace(entry,harrow_Library.DASH,"");
-	var key = res.split(harrow_Library.KEY);
+harrow_Library.setDialogue = function(page,entry) {
+	var res = entry.substring(1);
+	var key = res.split(":");
 	var text = StringTools.trim(key[harrow_Library.TYPE]);
 	var type = "empty";
 	var data = "empty";
 	var mode = "empty";
 	if(key.length > 1) {
 		var string = StringTools.trim(key[harrow_Library.TEXT]);
-		string = StringTools.replace(string,harrow_Library.SPACE,harrow_Library.KEY);
-		var prop = string.split(harrow_Library.KEY);
+		string = StringTools.replace(string," ",":");
+		var prop = string.split(":");
 		if(harrow_Library.isVariable(prop[harrow_Library.TEXT])) {
 			type = "variable";
 			data = string;
@@ -734,25 +944,24 @@ harrow_Library.getDialogue = function(page,entry) {
 	}
 	if(key.length > 2) {
 		mode = StringTools.trim(key[harrow_Library.DATA]);
-		mode = StringTools.replace(mode,harrow_Library.SPACE,harrow_Library.KEY);
+		mode = StringTools.replace(mode," ",":");
 	}
-	page.text = text + harrow_Library.ITEM + type + harrow_Library.ITEM + data + harrow_Library.ITEM + mode;
+	page.text = text + "::" + type + "::" + data + "::" + mode;
 	page.data = "button";
 };
-harrow_Library.getEvent = function(page,entry) {
+harrow_Library.setEvent = function(page,entry) {
 	var string = entry.substring(1,entry.length - 1);
 	string = StringTools.trim(string);
-	string = StringTools.replace(string,harrow_Library.COMA + harrow_Library.SPACE,harrow_Library.COMA);
-	string = StringTools.replace(string,harrow_Library.SPACE + harrow_Library.SPACE,harrow_Library.KEY);
-	string = StringTools.replace(string,harrow_Library.SPACE,harrow_Library.KEY);
-	var key = string.split(harrow_Library.KEY);
+	string = StringTools.replace(string," " + " ",":");
+	string = StringTools.replace(string," ",":");
+	var key = string.split(":");
 	var type = key[harrow_Library.TYPE];
 	page.type = "event";
 	page.text = StringTools.replace(string,type + ":","");
 	page.data = type;
 	if(type == "story" || type == "move") {
 		page.type = "move";
-		page.text = StringTools.replace(page.text,harrow_Library.KEY,harrow_Library.SPACE);
+		page.text = StringTools.replace(page.text,":"," ");
 	}
 	if(type == "lock" || type == "close") {
 		page.type = "move";
@@ -770,97 +979,76 @@ harrow_Library.getEvent = function(page,entry) {
 		page.text = string;
 	}
 };
-harrow_Library.isBreak = function(entry) {
-	if(entry.length >= 2 && entry.substring(0,2) == harrow_Library.DASH + harrow_Library.DASH) {
-		return true;
+harrow_Library.getDialogue = function(entry) {
+	if(entry.length >= 2 && entry.substring(0,2) == "-" + "-") {
+		return "break";
 	}
-	return false;
+	return "dialogue";
 };
-harrow_Library.isEvent = function(entry) {
+harrow_Library.getEvent = function(entry) {
 	if(entry.indexOf("]") != entry.length - 1) {
 		return "text";
 	}
 	return "event";
 };
 harrow_Library.isVariable = function(entry) {
-	if(entry == "=" || entry == "+" || entry == "-" || entry == "*" || entry == "/") {
-		return true;
-	}
-	if(entry == "is" || entry == "roll" || entry == "chance") {
-		return true;
-	}
-	return false;
+	return harrow_Logic.operators.indexOf(entry) != -1;
 };
 var harrow_Logic = function() { };
 harrow_Logic.__name__ = true;
 harrow_Logic.variable = function(entry) {
-	var key = entry.split(harrow_Library.KEY);
+	var key = entry.split(":");
 	var name = key.shift();
 	var type = key.shift();
-	var prop = key.join(harrow_Library.SPACE);
+	var prop = key.join(" ");
 	if(type != null) {
 		switch(type) {
+		case "%":
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
+			harrow_Logic.set(name,Std.string(a % b));
+			break;
+		case "%+":
+			var old = harrow_Logic.float(name);
+			var pct = harrow_Logic.float(prop);
+			var value = old + (100 - old) * pct / 100;
+			harrow_Logic.set(name,Std.string(harrow_Logic.clamp(value,0,100)));
+			break;
+		case "%-":
+			var old = harrow_Logic.float(name);
+			var pct = harrow_Logic.float(prop);
+			var value = old - old * pct / 100;
+			harrow_Logic.set(name,Std.string(harrow_Logic.clamp(value,0,100)));
+			break;
 		case "*":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			harrow_Logic.set(name,Std.string(a * b));
 			break;
 		case "+":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			harrow_Logic.set(name,Std.string(a + b));
 			break;
 		case "-":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			harrow_Logic.set(name,Std.string(a - b));
 			break;
 		case "/":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			harrow_Logic.set(name,Std.string(a / b));
 			break;
 		case "=":
-			harrow_Logic.set(name,harrow_Logic.get(prop));
+			harrow_Logic.set(name,harrow_Logic.string(prop));
 			break;
 		case "chance":
-			var prob = harrow_Random.chance(harrow_Logic.get(prop));
+			var prob = harrow_Random.chance(harrow_Logic.string(prop));
 			harrow_Logic.set(name,prob == null ? "null" : "" + prob);
 			break;
 		case "roll":
-			var roll = harrow_Random.dice(harrow_Logic.get(prop));
+			var roll = harrow_Random.dice(harrow_Logic.string(prop));
 			harrow_Logic.set(name,roll == null ? "null" : "" + roll);
 			break;
 		default:
@@ -874,80 +1062,65 @@ harrow_Logic.condition = function(entry) {
 	if(entry == "end") {
 		return true;
 	}
-	var key = entry.split(harrow_Library.KEY);
+	var key = entry.split(":");
 	var name = key.shift();
 	var type = key.shift();
-	var prop = key.join(harrow_Library.SPACE);
+	var prop = key.join(" ");
 	var result = false;
 	if(type != null) {
 		switch(type) {
+		case "!=":
+			result = harrow_Logic.string(name) != harrow_Logic.string(prop);
+			break;
 		case "<":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			result = a < b;
 			break;
 		case "<=":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			result = a <= b;
 			break;
-		case "=":
-			result = harrow_Logic.get(name) == harrow_Logic.get(prop);
+		case "=":case "==":case "is":
+			result = harrow_Logic.string(name) == harrow_Logic.string(prop);
 			break;
 		case ">":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			result = a > b;
 			break;
 		case ">=":
-			var number = parseFloat(harrow_Logic.get(name));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + name + "\". Expected: number");
-			}
-			var a = number;
-			var number = parseFloat(harrow_Logic.get(prop));
-			if(isNaN(number)) {
-				throw haxe_Exception.thrown("Invalid input format: \"" + prop + "\". Expected: number");
-			}
-			var b = number;
+			var a = harrow_Logic.float(name);
+			var b = harrow_Logic.float(prop);
 			result = a >= b;
 			break;
 		case "chance":
-			result = harrow_Random.chance(harrow_Logic.get(prop));
-			break;
-		case "is":
-			result = harrow_Logic.get(name) == harrow_Logic.get(prop);
+			result = harrow_Random.chance(harrow_Logic.string(prop));
 			break;
 		default:
 		}
 	}
 	return result;
 };
-harrow_Logic.get = function(entry) {
+harrow_Logic.clamp = function(v,min,max) {
+	if(v < min) {
+		return min;
+	}
+	if(v > max) {
+		return max;
+	}
+	return v;
+};
+harrow_Logic.float = function(entry) {
+	var number = parseFloat(harrow_Logic.string(entry));
+	if(isNaN(number)) {
+		console.log("src/harrow/Logic.hx:123:","Warning: \"" + entry + "\" is not a number, defaulting to 0");
+		return 0;
+	}
+	return number;
+};
+harrow_Logic.string = function(entry) {
 	if(entry == "false" || entry == "true") {
 		return entry;
 	}
@@ -960,6 +1133,7 @@ harrow_Logic.set = function(entry,value) {
 	harrow_Storage.set(entry,value);
 };
 var harrow_Page = function() {
+	this.tags = "";
 	this.data = "";
 	this.text = "";
 	this.type = "";
@@ -1021,6 +1195,9 @@ harrow_Runtime.prototype = {
 			if(this.page.data == "close") {
 				this.onClose();
 			}
+			if(this.page.data == "lock") {
+				this.onLock();
+			}
 			if(this.page.data == "move") {
 				this.story.move(this.page.text);
 				this.nextPage();
@@ -1056,15 +1233,6 @@ harrow_Runtime.prototype = {
 			this.nextPage();
 		}
 	}
-	,onChoice: function(type,data) {
-		if(type == "route") {
-			this.story.move(data);
-		}
-		if(type == "variable") {
-			harrow_Logic.variable(data);
-		}
-		this.nextPage();
-	}
 	,onPage: function(page) {
 	}
 	,onText: function(text,name) {
@@ -1078,6 +1246,8 @@ harrow_Runtime.prototype = {
 	,onStory: function(name) {
 	}
 	,onClose: function() {
+	}
+	,onLock: function() {
 	}
 	,onEnd: function() {
 	}
@@ -1122,13 +1292,22 @@ harrow_Story.prototype = {
 	}
 	,skip: function() {
 		var position = this.page + 1;
+		var depth = 0;
 		var _g = position;
 		var _g1 = this.data.length;
 		while(_g < _g1) {
 			var i = _g++;
 			if(this.data[i].type == "condition") {
+				if(this.data[i].data == "if") {
+					++depth;
+				}
 				if(this.data[i].text == "end" || this.data[i].text == "else") {
-					return this.page = i;
+					if(depth == 0) {
+						return this.page = i;
+					}
+					if(this.data[i].text == "end") {
+						--depth;
+					}
 				}
 			}
 		}
@@ -1154,12 +1333,6 @@ harrow_Story.prototype = {
 			if(this.data[i].type == type && this.data[i].text == text) {
 				return i;
 			}
-			if(text == "any" && this.data[i].type == type) {
-				return i;
-			}
-			if(type == "any" && this.data[i].text == text) {
-				return i;
-			}
 		}
 		return null;
 	}
@@ -1169,15 +1342,35 @@ harrow_Story.prototype = {
 };
 var harrow_Syntax = function() { };
 harrow_Syntax.__name__ = true;
+harrow_Syntax.customSyntax = function(page,entry) {
+};
 harrow_Syntax.validate = function(story) {
+	var variables_h = Object.create(null);
+	var duplicates_h = Object.create(null);
 	var routes_h = Object.create(null);
 	var _g = 0;
 	var _g1 = story.data;
 	while(_g < _g1.length) {
 		var page = _g1[_g];
 		++_g;
+		if(page.type == "variable") {
+			var parts = page.text.split(":");
+			var name = parts[0];
+			var type = parts[1];
+			if(type == "=" || type == "roll" || type == "chance") {
+				if(!harrow_Syntax.isValidName(name)) {
+					throw haxe_Exception.thrown("Invalid variable name \"" + name + "\"");
+				}
+				variables_h[name] = true;
+			}
+		}
 		if(page.type == "route" && page.data == "route") {
 			routes_h[page.text] = false;
+		}
+		if(page.type == "route") {
+			var name1 = page.text;
+			var count = Object.prototype.hasOwnProperty.call(duplicates_h,name1) ? duplicates_h[name1] + 1 : 1;
+			duplicates_h[name1] = count;
 		}
 	}
 	var _g = 0;
@@ -1188,24 +1381,34 @@ harrow_Syntax.validate = function(story) {
 		switch(page.type) {
 		case "condition":
 			if(page.data == "if") {
-				if(page.text.split(harrow_Library.KEY).length < 3) {
-					console.log("src/harrow/Syntax.hx:39:","Warning: Invalid input format: \"" + page.text + "\". Expected: name:operator:value");
+				if(page.text.split(":").length < 3) {
+					console.log("src/harrow/Syntax.hx:99:","Warning: Invalid input format: \"" + page.text + "\". Expected: name:operator:value");
 				}
 			}
 			break;
 		case "dialogue":
-			var lines = page.text.split(harrow_Library.LINE);
+			var lines = page.text.split("|");
 			var _g2 = 0;
 			while(_g2 < lines.length) {
 				var line = lines[_g2];
 				++_g2;
-				var parts = line.split(harrow_Library.ITEM);
+				var parts = line.split("::");
 				if(parts.length >= 3 && parts[1] == "route") {
 					var target = parts[2];
 					if(Object.prototype.hasOwnProperty.call(routes_h,target)) {
 						routes_h[target] = true;
 					} else {
-						console.log("src/harrow/Syntax.hx:32:","Warning: Reference to undefined route \"" + target + "\"");
+						console.log("src/harrow/Syntax.hx:78:","Warning: Reference to undefined route \"" + target + "\"");
+					}
+				}
+				if(parts.length >= 3 && parts[1] == "variable") {
+					var expr = parts[2].split(":");
+					var name = expr[0];
+					var type = expr[1];
+					if(harrow_Syntax.OPERATOR.indexOf(type) != -1) {
+						if(!Object.prototype.hasOwnProperty.call(variables_h,name)) {
+							console.log("src/harrow/Syntax.hx:90:","Warning: Variable \"" + name + "\" is not defined (used in dialogue choice)");
+						}
 					}
 				}
 			}
@@ -1215,16 +1418,39 @@ harrow_Syntax.validate = function(story) {
 				if(Object.prototype.hasOwnProperty.call(routes_h,page.text)) {
 					routes_h[page.text] = true;
 				} else {
-					console.log("src/harrow/Syntax.hx:19:","Warning: Reference to undefined route \"" + page.text + "\"");
+					console.log("src/harrow/Syntax.hx:63:","Warning: Reference to undefined route \"" + page.text + "\"");
 				}
 			}
 			break;
 		case "variable":
-			if(page.text.split(harrow_Library.KEY).length < 3) {
-				console.log("src/harrow/Syntax.hx:44:","Warning: Invalid input format: \"" + page.text + "\". Expected: name:operator:value");
+			var parts1 = page.text.split(":");
+			if(parts1.length < 3) {
+				console.log("src/harrow/Syntax.hx:107:","Warning: Invalid input format: \"" + page.text + "\". Expected: name:operator:value");
+			}
+			var name1 = parts1[0];
+			var type1 = parts1[1];
+			if(harrow_Syntax.OPERATOR.indexOf(type1) != -1) {
+				if(!Object.prototype.hasOwnProperty.call(variables_h,name1)) {
+					console.log("src/harrow/Syntax.hx:116:","Warning: Variable \"" + name1 + "\" is not defined");
+				}
 			}
 			break;
 		default:
+		}
+	}
+	var h = duplicates_h;
+	var _g_h = h;
+	var _g_keys = Object.keys(h);
+	var _g_length = _g_keys.length;
+	var _g_current = 0;
+	while(_g_current < _g_length) {
+		var key = _g_keys[_g_current++];
+		var _g_key = key;
+		var _g_value = _g_h[key];
+		var route = _g_key;
+		var count = _g_value;
+		if(count > 1) {
+			console.log("src/harrow/Syntax.hx:126:","Warning: Duplicate route \"" + route + "\" (appears " + count + " times)");
 		}
 	}
 	var h = routes_h;
@@ -1239,8 +1465,30 @@ harrow_Syntax.validate = function(story) {
 		var route = _g_key;
 		var reference = _g_value;
 		if(!reference) {
-			console.log("src/harrow/Syntax.hx:52:","Warning: Route \"" + route + "\" may be unreachable");
+			console.log("src/harrow/Syntax.hx:131:","Warning: Route \"" + route + "\" may be unreachable");
 		}
+	}
+};
+harrow_Syntax.isValidName = function(name) {
+	if(name == null || name.length == 0) {
+		return false;
+	}
+	var f = parseFloat(name);
+	if(!isNaN(f)) {
+		return false;
+	}
+	if(harrow_Syntax.RESERVED.indexOf(name) != -1) {
+		return false;
+	}
+	var first = name.charAt(0);
+	if(!(first >= "a" && first <= "z")) {
+		if(first >= "A") {
+			return first <= "Z";
+		} else {
+			return false;
+		}
+	} else {
+		return true;
 	}
 };
 var haxe_Exception = function(message,previous,native) {
@@ -1388,17 +1636,21 @@ if(typeof(performance) != "undefined" ? typeof(performance.now) == "function" : 
 String.__name__ = true;
 Array.__name__ = true;
 js_Boot.__toStr = ({ }).toString;
-harrow_Library.SPACE = " ";
-harrow_Library.LINE = "|";
-harrow_Library.ITEM = "::";
-harrow_Library.COMA = ",";
-harrow_Library.HASH = "#";
-harrow_Library.DASH = "-";
-harrow_Library.KEY = ":";
-harrow_Library.colonEscape = "::";
+Config.settings = "Settings";
+Config.endText = "<h2 style=\"text-align: center;\">The End.</h2>";
+Config.speaker = false;
+Config.maxHeight = 80;
+Config.maxVertical = 3;
+Config.folder = "";
+harrow_Library.DIVIDE = "";
+harrow_Library.ESCAPE = "\\:";
 harrow_Library.TYPE = 0;
 harrow_Library.TEXT = 1;
 harrow_Library.DATA = 2;
+harrow_Logic.operators = ["=","+","-","*","/","%","roll","chance","%+","%-"];
 harrow_Storage.variable = new haxe_ds_StringMap();
+harrow_Syntax.RESERVED = ["true","false","else","end","chance","roll"];
+harrow_Syntax.OPERATOR = ["=","+","-","*","/","%","%+","%-"];
+harrow_Syntax.custom = harrow_Syntax.customSyntax;
 App.main();
 })(typeof exports != "undefined" ? exports : typeof window != "undefined" ? window : typeof self != "undefined" ? self : this, typeof window != "undefined" ? window : typeof global != "undefined" ? global : typeof self != "undefined" ? self : this);

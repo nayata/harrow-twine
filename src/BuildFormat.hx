@@ -3,12 +3,12 @@ import haxe.Json;
 
 class BuildFormat {
 	public static macro function run() {
-		var html = sys.io.File.getContent("format.html");
-
-		var style = sys.io.File.getContent("main.css");
+		var style = Minify.run(sys.io.File.getContent("main.css"));
 		var novel = sys.io.File.getContent("novel.js");
 
-		var source = StringTools.replace(html, "{{CSS}}", style);
+		var source = sys.io.File.getContent("format.html");
+
+		source = StringTools.replace(source, "{{CSS}}", style);
 		source = StringTools.replace(source, "{{JS}}", novel);
 
 		var string = Json.stringify(source);

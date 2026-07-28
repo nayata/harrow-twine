@@ -1,6 +1,5 @@
 -cp src
 -lib harrow
--lib jQueryExtern
 -js novel.js
 -dce full
 -main App

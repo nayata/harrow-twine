@@ -14,8 +14,20 @@ window.storyFormat({
 							editor.replaceSelection('[move route]');
 							editor.focus();
 						},
-						insertLoad(editor) {
-							editor.replaceSelection('[story name]');
+						insertScene(editor) {
+							editor.replaceSelection('[scene name]');
+							editor.focus();
+						},
+						insertSceneClose(editor) {
+							editor.replaceSelection('[scene close]');
+							editor.focus();
+						},
+						insertBookmark(editor) {
+							editor.replaceSelection('[bookmark]');
+							editor.focus();
+						},
+						insertBookmarkReturn(editor) {
+							editor.replaceSelection('[return]');
 							editor.focus();
 						},
 						insertTransition(editor) {
@@ -70,12 +82,28 @@ window.storyFormat({
 									{
 										type: 'button',
 										command: 'insertMove',
-										label: 'Move to route'
+										label: 'Move to Route'
+									},
+									{type: 'separator'},
+									{
+										type: 'button',
+										command: 'insertScene',
+										label: 'Open Scene'
 									},
 									{
 										type: 'button',
-										command: 'insertLoad',
-										label: 'Load story'
+										command: 'insertSceneClose',
+										label: 'Close Scene'
+									},
+									{
+										type: 'button',
+										command: 'insertBookmark',
+										label: 'Add Bookmark'
+									},
+									{
+										type: 'button',
+										command: 'insertBookmarkReturn',
+										label: 'Return to Bookmark'
 									},
 									{type: 'separator'},
 									{

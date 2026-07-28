@@ -2,14 +2,15 @@ import harrow.Dialogue;
 import harrow.Library;
 import harrow.Runtime;
 import harrow.Storage;
+import harrow.Format;
 import harrow.Story;
 import harrow.Choice;
 import harrow.Logic;
 import harrow.Page;
 
 import js.Browser.document;
+import js.Browser.window;
 import js.html.Element;
-import js.jquery.JQuery;
 
 
 @:expose
@@ -19,16 +20,20 @@ class App {
 	public var novel:Runtime;
 	public var story:Story;
 
-	var textbox:Element;
+	var cover:Element;
+	var start:Element;
+	var transition:Element;
+	var imagebox:Element;
 	var dialogue:Element;
+	var textbox:Element;
 	var button:Element;
 
-	var bookmark:Array<Int> = [];
+	var settings:Settings;
 
-	var parsespeaker:Bool = false;
-	var maxlenght:Int = 240;
-	var buffer:String = "";
-	var folder:String = "";
+	var location:Array<Int> = [];
+	var bookmark:Int = -1;
+
+	var buffer:Buffer;
 
 
 	static function main() {
@@ -40,8 +45,10 @@ class App {
 		// Macro to build Twine `format.js` in `dist` folder
 		BuildFormat.run();
 		
-		var dice = new Dice();
-		harrow.Random.dice = dice.roll;
+		buffer = new Buffer();
+
+		harrow.Syntax.custom = customSyntax;
+		harrow.Random.dice = Dice.roll;
 
 		var storydata = document.querySelector('tw-storydata');
 
@@ -52,13 +59,19 @@ class App {
 		novel.onDialogue = onDialogue;
 		novel.onTransition = onTransition;
 		novel.onEvent = onEvent;
+		novel.onClose = onEnd;
 		novel.onEnd = onEnd;
 
-		textbox = document.querySelector('textbox');
+		cover = document.querySelector('cover');
+		start = document.querySelector('start');
+		transition = document.querySelector('transition');
+		imagebox = document.querySelector("imagebox");
 		dialogue = document.querySelector('dialogue');
-		button = document.querySelector('button');
+		textbox = document.querySelector('textbox');
+		button = document.querySelector('continue');
 
 		button.textContent = "Continue";
+		button.setAttribute("role", "button");
 		button.style.display = 'none';
 		button.onclick = function(event) {
 			onClick();
@@ -66,14 +79,6 @@ class App {
 
 		// Story Title
 		document.querySelector('chapter').innerHTML = storydata.getAttribute('name');
-
-		// Settings buttons
-		document.querySelector('close').onclick = function(event) {
-			close();
-		}
-		document.querySelector('open').onclick = function(event) {
-			open('Settings');
-		}
 
 		// Twine user style
 		var style = document.createElement('style');
@@ -85,75 +90,110 @@ class App {
 		script.innerHTML = document.querySelector('#twine-user-script').innerHTML;
 		document.querySelector('body').appendChild(script);
 
-		novel.nextPage();
+		// Story Title and Author
+		var passage = document.querySelector('tw-passagedata[name="StoryAuthor"]');
+		
+		document.querySelector('author').innerHTML = passage != null ? passage.innerHTML : "Story by Author";
+		document.querySelector('name').innerHTML = storydata.getAttribute('name');
+
+		// Settings
+		settings = new Settings(story, storydata);
+
+		document.querySelector('close').onclick = function(event) {
+			settings.close();
+		}
+		document.querySelector('open').onclick = function(event) {
+			settings.open();
+		}
+		
+		// Title page
+		document.querySelector('page').id = "title";
+		start.onclick = function(event) {
+			document.querySelector('page').removeAttribute("id");
+			novel.nextPage();
+		}
 	}
 
 
 	// `Continue` button event
 	function onClick() {
 		button.style.display = 'none';
+		textbox.innerHTML = '';
 		novel.nextPage();
 	}
 
 
-	// Show text stored in buffer
+	// Show button and text
 	function showText() {
-		textbox.innerHTML = buffer;
-		buffer = "";
-
-		textbox.style.opacity = "0";
-		new JQuery(textbox).fadeTo(300, 1);
+		button.style.display = 'block';
+		fade(textbox);
 	}
 
 
-	// Add text to buffer or show text if buffer length is > then maxlenght
+	// Show text or add text to buffer
 	function onText(text:String, name:String) {
 		var speaker = name != "" ? '<span class = "speaker">' + name + '</span>' : "";
 		var element = name != "" ? '<p class = "' + name + '">' : '<p>';
 
-		if (!parsespeaker &&  name != "") speaker = name + ": "; // Fix for already parsed speaker
+		if (!Config.speaker &&  name != "") speaker = name + ": ";
 
-		buffer = buffer + element + speaker + decode(text) + '</p>';
+		textbox.innerHTML += buffer.get();
 
-		var ready = buffer.length > maxlenght;
-		var page = novel.story.look(novel.story.page + 1);
-		var last = page == null;
-
-		if (last) {
-			button.style.display = 'block';
+		if (currentFillRatio() > Config.maxHeight) {
+			buffer.set(element + speaker + text + '</p>');
 			showText();
+			return;
 		}
 
+		textbox.innerHTML += element + speaker + text + '</p>';
+
+		var full = currentFillRatio() > Config.maxHeight;
+		var next = novel.story.look(novel.story.page + 1);
+		var last = next == null;
+
+		if (last) showText();
 		if (last) return;
 
-		if (page.type == Page.DIALOGUE && ready) {
-			novel.nextPage();
-		}
-		if (page.type != Page.DIALOGUE && ready) {
-			button.style.display = 'block';
-			showText();
+		if (full && next.type == Page.DIALOGUE) novel.nextPage();
+		if (full && next.type != Page.DIALOGUE) showText();
+
+		if (full) return;
+
+		var allowed = (next.type == Page.TEXT || next.type == Page.DIALOGUE || next.type == Page.EVENT);
+
+		if (next.type == Page.EVENT) {
+			if (next.data == "return") allowed = false;
+			if (next.data == "scene") allowed = false;
 		}
 
-		if (ready) return;
+		if (allowed) novel.nextPage();
+		if (!allowed) showText();
+	}
 
-		if (page.type == Page.TEXT || page.type == Page.DIALOGUE) {
-			novel.nextPage();
-		}
-		else {
-			button.style.display = 'block';
-			showText();
-		}
+
+	function currentFillRatio():Float {
+		var visibleHeight = textbox.clientHeight;
+
+		var last = textbox.lastElementChild;
+		var contentHeight = last != null ? last.offsetTop + last.offsetHeight : 0;
+
+		return Math.min(100, contentHeight / visibleHeight * 100);
 	}
 
 
 	// Show dialogue choices
 	function onDialogue(choices:Array<Choice>) {
-		if (buffer.length > 0) showText();
+		if (buffer.full()) textbox.innerHTML = buffer.get();
+
+		fade(textbox);
+
+		dialogue.removeAttribute("id");
+		if (choices.length > Config.maxVertical) dialogue.id = "horizontal";
 
 		for (entry in choices) {
 			var choice = document.createElement("choice");
 			choice.setAttribute("role", "button");
-			choice.innerHTML = format(entry.text);
+			choice.innerHTML = Format.variable(entry.text);
 
 			var allowed = entry.mode == "empty" ? true : Logic.condition(entry.mode);
 			if (!allowed) choice.className = "disabled";
@@ -171,7 +211,11 @@ class App {
 		dialogue.innerHTML = "";
 		textbox.innerHTML = "";
 
-		novel.onChoice(type, data);
+		if (type == "route" && data != "return") story.move(data);
+		if (data == "return" && bookmark != -1) story.turn(bookmark);
+		if (type == "variable") Logic.variable(data);
+		
+		novel.nextPage();
 	}
 
 
@@ -179,17 +223,36 @@ class App {
 	function onEvent(type:String, data:String) {
 		switch (type) {
 			case "config.parse.speaker": 
-				parsespeaker = data == "true";
-			case "config.text.maxlenght": 
-				maxlenght = Std.parseInt(data);
+				Config.speaker = data == "true";
+			case "config.text.fill": 
+				Config.maxHeight = Std.parseInt(data);
+			case "config.dialogue.vertical": 
+				Config.maxVertical = Std.parseInt(data);
+			case "config.settings.title": 
+				Config.settings = data;
+			case "config.text.end":
+				Config.endText = data;
 			case "config.assets.folder": 
-				folder = data;
+				Config.folder = data;
+
+			case "bookmark":
+				bookmark = data == "clear" ? -1 : story.page - 1;
+			case "return":
+				if (bookmark != -1) story.turn(bookmark);
+
 			case "scene": 
 				sceneEvent(data);
 			case "image": 
 				imageEvent(data);
+
+			case "dice":
+				buffer.set(Render.dice(data));
+			case "stat": 
+				buffer.set(Render.stat(data));
+			case "bar": 
+				buffer.set(Render.bar(data));
+
 			default:
-				screenEvent(type, data);
 		}
 	}
 
@@ -197,113 +260,61 @@ class App {
 	// Scene's emulation
 	function sceneEvent(data:String) {
 		if (data == "close") {
-			var page = bookmark.pop();
+			var page = location.pop();
 			if (page != null) story.turn(page);
 		}
 		else if (data == "clear") {
-			bookmark = [];
+			location = [];
 		}
 		else {
-			bookmark.push(story.page);
+			location.push(story.page);
 			story.move(data);
 		}
 	}
 
 
-	// Imagebox quick access: [image name] instead of [imagebox image name]
+	// Imagebox [image command/source]
 	function imageEvent(data:String) {
-		var element = document.querySelector("imagebox");
-
 		if (data == "show") {
 			document.querySelector('page').className = "novel";
-			element.style.display = 'block';
+			imagebox.style.display = 'block';
 		}
 		else if (data == "hide") {
 			document.querySelector('page').removeAttribute("class");
-			element.style.display = 'none';
+			imagebox.style.display = 'none';
 		}
 		else {
 			document.querySelector('page').className = "novel";
-			element.style.display = 'block';
 
-			element.style.backgroundImage = "url('" + folder + decode(data) + "')";
-			element.style.opacity = "0";
-			new JQuery(element).fadeTo(300, 1);
+			imagebox.style.backgroundImage = "url('" + Config.folder + data + "')";
+			imagebox.style.display = 'block';
+
+			fade(imagebox);
 		}
 	}
 
 
-	// Woking with 'html' elements
-	function screenEvent(name:String, data:String) {
-		var entry = data.split(":");
-
-		var type = entry.shift();
-		var text = entry.join(" ");
-
-		var element = document.querySelector(name);
-		if (element == null) return;
-
-		text = decode(text);
-
-		switch (type) {
-			case "add": 
-				var item = document.createElement(text);
-				element.appendChild(item);
-			case "append":
-				element.innerHTML = element.innerHTML + format(text);
-			case "before": 
-				var item = document.createElement(text);
-				element.parentNode.insertBefore(item, element);
-			case "after": 
-				var item = document.createElement(text);
-				element.parentNode.insertBefore(item, element.nextSibling);
-			case "onclick": 
-				element.setAttribute("onclick", format(text));
-			case "hide": 
-				element.style.display = 'none';
-			case "show": 
-				element.style.display = 'block';
-			case "class": 
-				element.setAttribute("class", text);
-				if (text == "default") element.removeAttribute("class");
-			case "id": 
-				element.setAttribute("id", text);
-				if (text == "default") element.removeAttribute("id");
-			case "html": 
-				element.innerHTML = text == "empty" ? "" : format(text);
-			case "text": 
-				element.textContent = text == "empty" ? "" : format(text);
-			case "css": 
-				var position = text.indexOf(' ');
-				var prop = text.substring(0, position);
-				var data = text.substring(position + 1, text.length);
-				element.style.setProperty(prop, data);
-			case "image": 
-				element.style.backgroundImage = "url('" + folder + text + "')";
-				element.style.opacity = "0";
-				new JQuery(element).fadeTo(300, 1);
-			case "remove": 
-				element.parentNode.removeChild(element);
-			default:
-		}
+	static function fade(element:Element, duration:Int = 300, from:Float = 0, to:Float = 1) {
+		element.style.transition = 'none';
+		element.style.opacity = Std.string(from);
+		element.getBoundingClientRect();
+		element.style.transition = 'opacity ${duration}ms';
+		element.style.opacity = Std.string(to);
 	}
 
 
 	// Transition
 	function onTransition(name:String) {
 		function hide() {
-			var transition = document.querySelector('transition');
 			transition.style.zIndex = "-1";
 		}
 		function fade() {
-			var transition = document.querySelector('transition');
-			transition.className = "off";
+			transition.className = "hidden";
 
 			haxe.Timer.delay(hide, 600);
 			novel.nextPage();
 		}
 
-		var transition = document.querySelector('transition');
 		transition.style.zIndex = "600";
 		transition.className = "active";
 
@@ -311,107 +322,26 @@ class App {
 	}
 
 
+	// Called on story end or on [close]
 	function onEnd() {
-		textbox.innerHTML = "<p>Story End.</p>";
-		new JQuery(textbox).fadeTo(300, 1);
+		buffer.clear(); 
+		textbox.innerHTML = Config.endText;
+		fade(textbox);
+
+		button.textContent = "Restart";
+		button.style.display = 'block';
+		button.onclick = function(event) {
+			window.location.reload();
+		}
 	}
 
 
-	// Open specific route in 'Settings' screen
-	public function open(name:String) {
-		var page = story.find(Page.ROUTE, name);
-		if (page == null) return;
-
-		var skip = false;
-		var string = '';
-
-		page = page + 1;
-
-		for (i in page...story.data.length) {
-			if (story.data[i].type == Page.ROUTE) break;
-			if (story.data[i].type == Page.CONDITION) {
-				if (skip && story.data[i].text == "else" || skip && story.data[i].text == "end") {
-					skip = false;
-				}
-				else {
-					skip = !Logic.condition(story.data[i].text);
-				}
-			}
-
-			if (skip) continue;
-
-			if (story.data[i].type == Page.TEXT) {
-				var speaker = story.data[i].data;
-				var element = speaker != "" ? '<p class = "' + speaker + '">' : '<p>';
-
-				string = string + element + story.data[i].text + '</p>';
-			}
-			if (story.data[i].type == Page.EVENT) {
-				var element = StringTools.replace(story.data[i].text, ":", " ");
-
-				element = story.data[i].data + " " + decode(element);
-				element = format(element);
-
-				string = string + element;
+	function customSyntax(page:Page, entry:String) {
+		if (page.type == Page.TEXT) {
+			if (page.data == '<img src="https' || page.data == '<img src="http') {
+				page.text = page.data + ":" + page.text;
+				page.data = "";
 			}
 		}
-
-		document.querySelector('close').style.zIndex = "400";
-
-		var element = document.querySelector('settings');
-		element.innerHTML = '<content>' + string + '</content>';
-		element.setAttribute("class", name.toLowerCase());
-		element.style.display = 'grid';
-		element.style.zIndex = "300";
-		element.style.opacity = "1";
-	}
-
-
-	// Close 'Settings' screen
-	public function close() {
-		document.querySelector('close').style.zIndex = "-1";
-
-		var element = document.querySelector('settings');
-		element.removeAttribute("class");
-		element.style.display = 'none';
-		element.style.opacity = "0";
-		element.style.zIndex = "-1";
-	}
-
-
-	// Get variable value from `harrow.Storage`
-	public function get(key:String):String {
-		return Storage.get(key);
-	}
-
-
-	// Set variable to `harrow.Storage`
-	public function set(key:String, value:String) {
-		Storage.set(key, value);
-	}
-
-
-	// HTML colon fix
-	function decode(entry:String):String {
-		entry = StringTools.replace(entry, "https ", "https:");
-		entry = StringTools.replace(entry, "http ", "http:");
-		return entry;
-	}
-
-
-	// HTML variables
-	function format(entry:String):String {
-		if (entry.indexOf("$") == -1) return entry;
-
-		var rex:EReg = ~/\$\S+?(?=[^a-zA-Z.]|$)/g;
-		entry = rex.map(entry, function(r) {
-			var matching = r.matched(0);
-			var variable = matching.substring(1, matching.length);
-
-			if (Storage.has(variable)) return Storage.get(variable);
-			return matching;
-		});
-
-		return entry;
 	}
 }
