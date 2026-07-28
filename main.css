@@ -10,6 +10,9 @@
 	--tab-active-bg: #6e6e6e;
 	--tab-hover: #e0e0e0;
 	--tab-bg: #eee;
+
+	--bar-face: #c2185b;
+	--bar-back: #e8e8e8;
 }
 :root[data-theme="dark"] {
     --text-color: #ddd;
@@ -23,6 +26,9 @@
 	--tab-active-bg: #333;
 	--tab-hover: #222;
 	--tab-bg: #131313;
+
+	--bar-face: #c2185b;
+	--bar-back: #333;
 }
 :root[data-theme="dark"] open,
 :root[data-theme="dark"] close {
@@ -386,9 +392,9 @@ dice value {
     z-index: 1;
 	color: var(--text-color);
     font-weight: 700;
-    font-size: 1.1em;
+    font-size: 1.25em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --offset-y: 0px;
+    --offset-y: 2px;
     transform: translateY(var(--offset-y));
 }
 
@@ -403,15 +409,14 @@ stat bar {
     display: block;
     width: 100%;
     height: 30px;
-    background: #e8e8e8;
+    background: var(--bar-back);
     border-radius: 4px;
     overflow: hidden;
 }
 stat fill {
     display: block;
     height: 100%;
-    background: #c2185b;
-    transition: width 0.6s ease;
+    background: var(--bar-face);
 }
 stat label {
     position: absolute;

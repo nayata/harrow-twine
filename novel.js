@@ -153,7 +153,7 @@ App.prototype = {
 	,onDialogue: function(choices) {
 		var _gthis = this;
 		if(this.buffer.full()) {
-			this.textbox.innerHTML = this.buffer.get();
+			this.textbox.innerHTML += this.buffer.get();
 		}
 		App.fade(this.textbox);
 		this.dialogue.removeAttribute("id");
@@ -201,6 +201,9 @@ App.prototype = {
 		case "bookmark":
 			this.bookmark = data == "clear" ? -1 : this.story.page - 1;
 			break;
+		case "chapter":
+			window.document.querySelector("chapter").innerHTML = harrow_Format.string(data);
+			break;
 		case "config.assets.folder":
 			Config.folder = data;
 			break;
@@ -211,10 +214,10 @@ App.prototype = {
 			Config.speaker = data == "true";
 			break;
 		case "config.settings.title":
-			Config.settings = data;
+			Config.settings = harrow_Format.string(data);
 			break;
 		case "config.text.end":
-			Config.endText = data;
+			Config.endText = harrow_Format.string(data);
 			break;
 		case "config.text.fill":
 			Config.maxHeight = Std.parseInt(data);
@@ -836,6 +839,9 @@ harrow_Format.variable = function(entry) {
 		return matching;
 	});
 	return entry;
+};
+harrow_Format.string = function(entry) {
+	return StringTools.replace(entry,":"," ");
 };
 var harrow_Library = function() { };
 harrow_Library.__name__ = true;

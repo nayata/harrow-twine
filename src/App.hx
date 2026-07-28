@@ -190,7 +190,7 @@ class App {
 
 	// Show dialogue choices
 	function onDialogue(choices:Array<Choice>) {
-		if (buffer.full()) textbox.innerHTML = buffer.get();
+		if (buffer.full()) textbox.innerHTML += buffer.get();
 
 		fade(textbox);
 
@@ -236,9 +236,9 @@ class App {
 			case "config.dialogue.vertical": 
 				Config.maxVertical = Std.parseInt(data);
 			case "config.settings.title": 
-				Config.settings = data;
+				Config.settings = Format.string(data);
 			case "config.text.end":
-				Config.endText = data;
+				Config.endText = Format.string(data);
 			case "config.assets.folder": 
 				Config.folder = data;
 
@@ -247,6 +247,8 @@ class App {
 			case "return":
 				if (bookmark != -1) story.turn(bookmark);
 
+			case "chapter":
+				document.querySelector('chapter').innerHTML = Format.string(data);
 			case "scene": 
 				sceneEvent(data);
 			case "image": 
