@@ -208,7 +208,7 @@ Tab content supports `[if]`/`[else]`/`[end]` (including nested conditions), regu
 
 ### Speaker Parsing & Escaping
 
-When `config.parse.speaker` is `true`, a text line written as `Name: text` has `Name` wrapped in an invisible `<span class="speaker">` - hidden by default, but can be made visible and styled through custom CSS (for example, giving `speaker` a `display` and font/color rules of your own). When `config.parse.speaker` is `false`, no span is inserted; the speaker name is instead written directly into the visible text as a plain `Name: ` prefix.
+When **config.parse.speaker** is `true`, a text line written as `Name: text` has `Name` wrapped in an invisible `<span class="speaker">` - hidden by default, but can be made visible and styled through custom CSS (for example, giving *speaker* a *display* and font/color rules of your own). When **config.parse.speaker** is `false`, no span is inserted; the speaker name is instead written directly into the visible text as a plain `Name: ` prefix.
 
 Because a leading `:` on a text line is what marks a speaker name, a line that needs a literal colon without triggering this split should escape it with a backslash: `\:`.
 
@@ -227,8 +227,51 @@ Set once, typically near the top of the story, before any content is shown:
 ```
 
 * **config.parse.speaker** - *true/false* - whether `Name: text` lines render the name inline as prose instead of as a styled speaker tag
-* `config.text.fill` Percentage of textbox height that triggers a page break (lower = shorter pages)
-* `config.dialogue.vertical` Choice count above which dialogue switches to a horizontal layout
-* `config.settings.title` The title shown at the top of the Settings screen
-* `config.text.end` Text shown when the story ends or `[close]` is used
-* `config.assets.folder` Base path used by `[image ...]`
+* **config.text.fill** - Percentage of textbox height that triggers a page break (lower = shorter pages)
+* **config.dialogue.vertical** - Choice count above which dialogue switches to a horizontal layout
+* **config.settings.title** - The title shown at the top of the Settings screen
+* **config.text.end** - Text shown when the story ends or `[close]` is used
+* **config.assets.folder** - Base path used by `[image ...]`
+
+
+## Customization
+
+The story's appearance can be customized in two ways:
+
+- **In the Twine editor**, via the story's **Story Stylesheet** panel - CSS written there is saved with the story and applied automatically every time it's played or re-exported.
+- **In an exported story**, by opening the published single-file `.html` in a text editor and editing the embedded `<style>` tag directly (or replacing it with a link to an external stylesheet) - a common approach once a story is finished and distributed as a standalone file.
+
+Either way, custom rules are layered on top of the format's own `main.css`, so only the properties actually overridden need to be included - everything else keeps the format's defaults.
+
+### Themes
+
+Colors are defined as CSS custom properties on `:root`, with a dark variant activated through `data-theme="dark"` (toggled automatically by the built-in Theme setting):
+
+```css
+:root {
+    --text-color: #333;
+    --button-bg: rgb(50, 50, 50);
+    --page-bg: #fafafa;
+    /* ... */
+}
+:root[data-theme="dark"] {
+    --text-color: #ddd;
+    --button-bg: #444;
+    --page-bg: #1a1a1a;
+    /* ... */
+}
+```
+
+Overriding a story's palette means redefining these variables rather than editing individual element rules - every part of the interface (buttons, tabs, stat bars, page background) reads its colors from this shared set.
+
+### Fonts
+
+The page's font is set on `body`, and can be overridden the same way as any other property:
+
+```css
+body {
+    font-family: 'Merriweather', serif;
+}
+```
+
+The built-in Font Family setting reads whatever is set on `body` at story start as its "Default" option, so a custom font declared here becomes the default the reader sees, with the format's serif alternative offered as the second option to cycle through.
