@@ -196,7 +196,7 @@ To add a tab, tag a passage `menu` in the Twine editor:
 Tag the `Character` passage with `menu`, and a **Character** tab appears in Settings, showing the rendered content of the `# Character` route. Any number of passages can be tagged this way - each becomes its own tab, in the order they appear in the story file. If at least one `menu`-tagged passage exists, the built-in font/theme/restart screen becomes its own **Settings** tab alongside them, rather than being the only thing shown; if none exist, it's shown directly with no tabs at all.
 
 ```
-**Character**
+<h2>Character</h2>
 
 [player]
 Gold: [gold]
