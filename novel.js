@@ -90,19 +90,20 @@ App.prototype = {
 		App.fade(this.textbox);
 	}
 	,onText: function(text,name) {
+		var limit = this.imagebox.style.display == "block" ? Config.maxHeight - 20 : Config.maxHeight;
 		var speaker = name != "" ? "<span class = \"speaker\">" + name + "</span>" : "";
 		var element = name != "" ? "<p class = \"" + name + "\">" : "<p>";
 		if(!Config.speaker && name != "") {
 			speaker = name + ": ";
 		}
 		this.textbox.innerHTML += this.buffer.get();
-		if(this.currentFillRatio() > Config.maxHeight) {
+		if(this.currentFillRatio() > limit) {
 			this.buffer.set(element + speaker + text + "</p>");
 			this.showText();
 			return;
 		}
 		this.textbox.innerHTML += element + speaker + text + "</p>";
-		var full = this.currentFillRatio() > Config.maxHeight;
+		var full = this.currentFillRatio() > limit;
 		var next = this.novel.story.look(this.novel.story.page + 1);
 		var last = next == null;
 		if(last) {
@@ -137,10 +138,17 @@ App.prototype = {
 		}
 	}
 	,currentFillRatio: function() {
-		var visibleHeight = this.textbox.clientHeight;
+		if(this.textbox.clientHeight <= 0) {
+			return 0;
+		}
 		var last = this.textbox.lastElementChild;
-		var contentHeight = last != null ? last.offsetTop + last.offsetHeight : 0;
-		return Math.min(100,contentHeight / visibleHeight * 100);
+		if(last == null) {
+			return 0;
+		}
+		var pageRect = this.textbox.getBoundingClientRect();
+		var lastRect = last.getBoundingClientRect();
+		var contentHeight = lastRect.bottom - pageRect.top;
+		return Math.min(100,contentHeight / this.textbox.clientHeight * 100);
 	}
 	,onDialogue: function(choices) {
 		var _gthis = this;

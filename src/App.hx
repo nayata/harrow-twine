@@ -29,11 +29,10 @@ class App {
 	var button:Element;
 
 	var settings:Settings;
+	var buffer:Buffer;
 
 	var location:Array<Int> = [];
 	var bookmark:Int = -1;
-
-	var buffer:Buffer;
 
 
 	static function main() {
@@ -132,6 +131,8 @@ class App {
 
 	// Show text or add text to buffer
 	function onText(text:String, name:String) {
+		var limit = imagebox.style.display == 'block' ? Config.maxHeight - 20 : Config.maxHeight;
+
 		var speaker = name != "" ? '<span class = "speaker">' + name + '</span>' : "";
 		var element = name != "" ? '<p class = "' + name + '">' : '<p>';
 
@@ -139,7 +140,7 @@ class App {
 
 		textbox.innerHTML += buffer.get();
 
-		if (currentFillRatio() > Config.maxHeight) {
+		if (currentFillRatio() > limit) {
 			buffer.set(element + speaker + text + '</p>');
 			showText();
 			return;
@@ -147,7 +148,7 @@ class App {
 
 		textbox.innerHTML += element + speaker + text + '</p>';
 
-		var full = currentFillRatio() > Config.maxHeight;
+		var full = currentFillRatio() > limit;
 		var next = novel.story.look(novel.story.page + 1);
 		var last = next == null;
 
@@ -171,13 +172,19 @@ class App {
 	}
 
 
+	// Calculate textbox fill ratio
 	function currentFillRatio():Float {
-		var visibleHeight = textbox.clientHeight;
-
+		if (textbox.clientHeight <= 0) return 0;
+	
 		var last = textbox.lastElementChild;
-		var contentHeight = last != null ? last.offsetTop + last.offsetHeight : 0;
-
-		return Math.min(100, contentHeight / visibleHeight * 100);
+		if (last == null) return 0;
+	
+		var pageRect = textbox.getBoundingClientRect();
+		var lastRect = last.getBoundingClientRect();
+	
+		var contentHeight = lastRect.bottom - pageRect.top;
+	
+		return Math.min(100, contentHeight / textbox.clientHeight * 100);
 	}
 
 
