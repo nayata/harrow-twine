@@ -1,3 +1,5 @@
+![Harrow](/harrow.png "Harrow")
+
 # Introduction
 
 **Harrow Twine** is a Twine 2 story format built on the Harrow narrative library.
