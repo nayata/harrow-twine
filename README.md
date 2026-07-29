@@ -513,6 +513,8 @@ The built-in **Settings** screen provides several options for customizing the re
 
 ## Custom Tabs
 
+![Custom Tabs](./images/menu.png)
+
 The Settings screen can be extended with your own tabs, similar to the **Show Stats**, **Achievements**, and **Menu** screens found in *Choice of Games*.
 
 To add a custom tab, assign the **`menu`** tag to any passage in the Twine editor. Each tagged passage automatically appears as a new tab using the passage name as its title. Selecting a tab loads that passage into the Settings screen without interrupting the current story.
