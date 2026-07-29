@@ -460,3 +460,53 @@ Attack Roll
     The attack misses.
 [end]
 ```
+
+
+## Imagebox
+
+The imagebox is a built-in container for displaying images alongside the story. It is hidden by default and can display images from either a local file or a remote URL.
+
+#### Displaying an Image
+
+```harrow
+[image images/castle.png]
+[image https://example.com/castle.png]
+```
+
+Setting an image automatically updates the imagebox and makes it visible.
+
+#### Showing and Hiding
+
+The imagebox can be shown or hidden without changing its current image.
+
+`[image show]` — shows the imagebox.
+`[image hide]` — hides the imagebox.
+
+This makes it easy to reuse the same image throughout multiple passages without loading it again.
+
+
+## Settings Screen
+
+The built-in **Settings** screen provides several options for customizing the reading experience:
+
+* **Font Size** — cycles between **Default**, **Large**, and **Small**. This affects the story textbox only.
+* **Font Family** — cycles between the page's default font and a serif alternative. This setting applies to the entire page (`body`).
+* **Theme** — cycles between **Light** and **Dark**.
+* **Restart the Game** — restarts the story from the beginning.
+* **Return** — closes the Settings screen and resumes the story.
+
+
+## Custom Tabs
+
+The Settings screen can be extended with your own tabs, similar to the **Show Stats**, **Achievements**, and **Menu** screens found in *Choice of Games*.
+
+To add a custom tab, assign the **`menu`** tag to any passage in the Twine editor. Each tagged passage automatically appears as a new tab using the passage name as its title. Selecting a tab loads that passage into the Settings screen without interrupting the current story.
+
+The content of a menu passage supports:
+
+* regular text
+* `[if]` / `[else]` / `[end]` (including nested conditions)
+* `[stat]`
+* `[bar]`
+
+Menu passages are **read-only**. They do not execute variable assignments or other state-changing operations such as `=`, `+=`, `-=`, `%+`, `%-`, or `roll`. Opening a tab displays the current state of the story without modifying it.
