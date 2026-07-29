@@ -373,4 +373,27 @@ A seasoned explorer who prefers diplomacy over violence, but never backs down fr
 ```
 
 
-так же вы можете ограничить высоту текста чтобы например достичь вида визуальной новеллы.
+## Bar
+
+The `bar` command displays a variable as a progress bar together with its current and maximum values.
+
+```harrow
+[bar health]
+```
+
+By default, the maximum value is **100**, so a variable with a value of `75` is displayed as **75 / 100**.
+
+## Custom Maximum Values
+
+A variable's maximum value can be customized by defining a companion variable with the `.max` suffix.
+
+```harrow
+[health.max = 80]
+[health = 80]
+
+[bar health]
+```
+
+The progress bar will now display **80 / 80** instead of **80 / 100**.
+
+This is useful for values that do not naturally use a 0–100 scale, such as health, mana, stamina, ammunition, or experience.
