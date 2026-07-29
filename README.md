@@ -414,6 +414,8 @@ This is useful for values that do not naturally use a 0–100 scale, such as hea
 
 ## Dice
 
+![Dice](./images/dice.png)
+
 Harrow Twine supports dice rolls for RPG mechanics, random events, and skill checks.
 
 The `roll` operator can use either a simple numeric range or standard dice notation.
