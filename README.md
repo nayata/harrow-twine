@@ -386,6 +386,8 @@ A seasoned explorer who prefers diplomacy over violence, but never backs down fr
 
 ## Bar
 
+![Bar](./images/bar.png)
+
 The `bar` command displays a variable as a progress bar together with its current and maximum values.
 
 ```harrow
