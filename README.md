@@ -336,6 +336,8 @@ The text of the ending screen can be customized through the story configuration:
 
 ## CoG-style Fairmath
 
+![Fairmath](./images/stat.png)
+
 Harrow Twine includes support for **Fairmath**, the percentage-based stat system popularized by *Choice of Games*.
 
 Unlike simple addition and subtraction, Fairmath makes large values harder to increase and small values harder to decrease. This produces smooth character progression without allowing statistics to reach their minimum or maximum too quickly.
