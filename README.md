@@ -91,6 +91,13 @@ This allows you to write naturally without manually splitting passages into smal
 
 You can even place an entire chapter or short story inside a single passage, and **Harrow Twine** will paginate it automatically.
 
+#### HTML Support
+
+Passages can contain standard HTML alongside normal story text. This makes it easy to add headings, styled text, inline images, or other HTML elements when needed.
+
+Commonly used elements include `<h2>`, `<span>`, and `<img>`.
+
+
 
 ## Choices
 
@@ -422,7 +429,7 @@ The format is **XdY**, where:
 
 When multiple dice are rolled, their values are added together.
 
-## Highest and Lowest Rolls
+#### Highest and Lowest Rolls
 
 Dice notation also supports the `h` (**highest**) and `l` (**lowest**) modifiers.
 
@@ -510,3 +517,13 @@ The content of a menu passage supports:
 * `[bar]`
 
 Menu passages are **read-only**. They do not execute variable assignments or other state-changing operations such as `=`, `+=`, `-=`, `%+`, `%-`, or `roll`. Opening a tab displays the current state of the story without modifying it.
+
+
+## Title Screen
+
+When the story starts, Harrow Twine displays a built-in title screen showing the story title.
+
+Below the title is a reserved line for the author's name. Since Twine does not provide author metadata, Harrow Twine reads it from a passage named **`StoryAuthor`**.
+
+Create a passage with that exact name and place the author's name (or any other text) inside it. If the `StoryAuthor` passage is not present, the default placeholder **"Story by Author"** is displayed.
+
