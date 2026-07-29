@@ -383,7 +383,7 @@ The `bar` command displays a variable as a progress bar together with its curren
 
 By default, the maximum value is **100**, so a variable with a value of `75` is displayed as **75 / 100**.
 
-## Custom Maximum Values
+#### Custom Maximum Values
 
 A variable's maximum value can be customized by defining a companion variable with the `.max` suffix.
 
@@ -397,3 +397,66 @@ A variable's maximum value can be customized by defining a companion variable wi
 The progress bar will now display **80 / 80** instead of **80 / 100**.
 
 This is useful for values that do not naturally use a 0–100 scale, such as health, mana, stamina, ammunition, or experience.
+
+
+## Dice
+
+Harrow Twine supports dice rolls for RPG mechanics, random events, and skill checks.
+
+The `roll` operator can use either a simple numeric range or standard dice notation.
+
+`[hit roll 10]` Rolls a random value between **1** and **10**.
+
+Alternatively, you can use dice notation:
+
+```harrow
+[damage roll 1d20]
+[damage roll 2d6]
+[damage roll 3d8]
+```
+
+The format is **XdY**, where:
+
+* **X** is the number of dice.
+* **Y** is the number of sides on each die.
+
+When multiple dice are rolled, their values are added together.
+
+## Highest and Lowest Rolls
+
+Dice notation also supports the `h` (**highest**) and `l` (**lowest**) modifiers.
+
+```harrow
+[attack roll 3d6h]
+[penalty roll 3d6l]
+```
+
+`3d6h` rolls three six-sided dice and keeps only the **highest** result.
+
+`3d6l` rolls three six-sided dice and keeps only the **lowest** result.
+
+#### Displaying Dice
+
+The result of a dice roll can be displayed using the `dice` command.
+
+```harrow
+[dice critical]
+```
+
+This renders the variable as a die showing its current value, making dice rolls easy to highlight during gameplay.
+
+Example:
+
+```harrow
+[attack roll 1d20]
+
+Attack Roll
+
+[dice attack]
+
+[if attack >= 15]
+    A solid hit!
+[else]
+    The attack misses.
+[end]
+```
