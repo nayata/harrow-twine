@@ -124,7 +124,7 @@ In this example:
 ## Branching
 
 Branching in Harrow is done using `routes`, which are declared with the `#` symbol at the beginning of a line.
-Routes function similarly to `passages` in **Twine**.
+Routes function similarly to `passages`.
 
 To move to a specific route, use an action in a choice or a move command:
 `[move RouteName]`.
@@ -290,7 +290,7 @@ A choice can also use `return` directly instead of a passage name:
 [bookmark]
 
 You step out of the entry portal into the abandoned Central Plaza. 
-Once a thriving nightlife hub, now it’s a ghost town of flickering neon and drifting trash. Broken vending machines spark weakly.
+Once a thriving nightlife hub, now it’s a ghost town of flickering neon and drifting trash.
 In the distance, the skeletal silhouette of the old factory looms beyond layers of fog.
 
 - Check your gear : Inventory
@@ -318,12 +318,59 @@ This can be changed at any point during the story and does not affect the story 
 
 `[close]` Ends the story and displays the ending screen.
 
-The appearance and text of the ending screen can be customized through the story configuration:
+The text of the ending screen can be customized through the story configuration:
 
 ```harrow
 [config.text.end <h2>That is where the story ends.</h2>]
 ```
 
+
+## CoG-style Fairmath
+
+Harrow Twine includes support for **Fairmath**, the percentage-based stat system popularized by *Choice of Games*.
+
+Unlike simple addition and subtraction, Fairmath makes large values harder to increase and small values harder to decrease. This produces smooth character progression without allowing statistics to reach their minimum or maximum too quickly.
+
+Fairmath is available for any numeric variable using the `%+` and `%-` operators.
+
+```harrow
+[strength %+ 20]
+[morality %- 15]
+```
+
+Because Fairmath values are stored as normal variables, they can be used anywhere a regular variable can be used, including conditions.
+
+```harrow
+[if strength >= 70]
+    You effortlessly force the door open.
+[else]
+    The door refuses to budge.
+[end]
+```
+
+#### Displaying Stats
+
+A Fairmath variable can be displayed as a built-in progress bar using the `stat` command.
+
+```harrow
+[stat strength]
+```
+
+The current value is shown both numerically and visually, making it ideal for character attributes such as strength, reputation, health, morale, or relationships.
+
+Example:
+
+```harrow
+Character: [player.name]
+
+Strength
+[stat strength]
+
+Reputation
+[stat reputation]
+
+A seasoned explorer who prefers diplomacy over violence, but never backs down from a challenge.
+```
 
 
 так же вы можете ограничить высоту текста чтобы например достичь вида визуальной новеллы.
