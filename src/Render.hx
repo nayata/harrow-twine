@@ -21,8 +21,12 @@ class Render {
 	}
 
 	public static function bar(name:String):String {
-		var upper = name.charAt(0).toUpperCase() + name.substr(1);
-		var label = upper.split(".").shift();
+		var label = Storage.get(name + ".label");
+		
+		if (label == null) {
+			label = name.charAt(0).toUpperCase() + name.substr(1);
+			label = label.split(".").shift();
+		}
 
 		var value = Std.parseFloat(Storage.get(name));
 		var total = Std.parseFloat(Storage.get(name + ".max"));
