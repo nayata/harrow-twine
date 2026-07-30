@@ -1,8 +1,10 @@
+# Harrow
+
 ![Harrow](/harrow.png "Harrow")
 
 # Introduction
 
-**Harrow Twine** is a Twine 2 story format built on the Harrow narrative library.
+**Harrow Twine** is a Twine 2 story format built on the [Harrow](https://github.com/nayata/harrow) narrative library.
 
 Unlike formats such as **Harlowe** or **SugarCube**, Harrow Twine focuses on a structured, gamebook-style experience inspired by **Choice of Games**. Readers progress through self-contained pages, make dialogue-style choices, and see only the options that are currently available based on the game's state.
 
@@ -34,6 +36,8 @@ https://nayata.github.io/format/format.js
 
 
 ## Writing Stories
+
+![Writing Stories](./images/text.png)
 
 A Harrow Twine story consists of **passages**. Each passage represents a complete scene. The story begins in the first passage and continues by moving to other passages.
 
