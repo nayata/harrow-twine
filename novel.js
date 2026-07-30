@@ -11,7 +11,7 @@ var App = $hx_exports["App"] = function() {
 	this.location = [];
 	var _gthis = this;
 	this.buffer = new Buffer();
-	harrow_Syntax.custom = $bind(this,this.customSyntax);
+	harrow_Library.ESCAPE = ":";
 	harrow_Random.dice = Dice.roll;
 	var storydata = window.document.querySelector("tw-storydata");
 	this.story = Parser.get(storydata);
@@ -63,22 +63,6 @@ App.__name__ = true;
 App.main = function() {
 	App.ME = new App();
 };
-App.fade = function(element,duration,from,to) {
-	if(to == null) {
-		to = 1;
-	}
-	if(from == null) {
-		from = 0;
-	}
-	if(duration == null) {
-		duration = 300;
-	}
-	element.style.transition = "none";
-	element.style.opacity = from == null ? "null" : "" + from;
-	element.getBoundingClientRect();
-	element.style.transition = "opacity " + duration + "ms";
-	element.style.opacity = to == null ? "null" : "" + to;
-};
 App.prototype = {
 	onClick: function() {
 		this.button.style.display = "none";
@@ -87,22 +71,20 @@ App.prototype = {
 	}
 	,showText: function() {
 		this.button.style.display = "block";
-		App.fade(this.textbox);
+		if(Config.fadeText) {
+			this.fade(this.textbox);
+		}
 	}
 	,onText: function(text,name) {
 		var limit = this.imagebox.style.display == "block" ? Config.maxHeight - 20 : Config.maxHeight;
-		var speaker = name != "" ? "<span class = \"speaker\">" + name + "</span>" : "";
-		var element = name != "" ? "<p class = \"" + name + "\">" : "<p>";
-		if(!Config.speaker && name != "") {
-			speaker = name + ": ";
-		}
+		var paragraph = "<p>" + this.getText(text) + "</p>";
 		this.textbox.innerHTML += this.buffer.get();
 		if(this.currentFillRatio() > limit) {
-			this.buffer.set(element + speaker + text + "</p>");
+			this.buffer.set(paragraph);
 			this.showText();
 			return;
 		}
-		this.textbox.innerHTML += element + speaker + text + "</p>";
+		this.textbox.innerHTML += paragraph;
 		var full = this.currentFillRatio() > limit;
 		var next = this.novel.story.look(this.novel.story.page + 1);
 		var last = next == null;
@@ -137,6 +119,21 @@ App.prototype = {
 			this.showText();
 		}
 	}
+	,getText: function(entry) {
+		if(!Config.speaker) {
+			return entry;
+		}
+		var raw = StringTools.replace(entry,"\\:",harrow_Library.DIVIDE);
+		var key = raw.indexOf(":");
+		if(key == -1) {
+			return entry;
+		}
+		var name = StringTools.trim(HxOverrides.substr(raw,0,key));
+		var text = StringTools.trim(HxOverrides.substr(raw,key + 1,null));
+		name = StringTools.replace(name,harrow_Library.DIVIDE,":");
+		text = StringTools.replace(text,harrow_Library.DIVIDE,":");
+		return "<span class=\"speaker\">" + name + "</span>" + text;
+	}
 	,currentFillRatio: function() {
 		if(this.textbox.clientHeight <= 0) {
 			return 0;
@@ -155,7 +152,9 @@ App.prototype = {
 		if(this.buffer.full()) {
 			this.textbox.innerHTML += this.buffer.get();
 		}
-		App.fade(this.textbox);
+		if(Config.fadeText) {
+			this.fade(this.textbox);
+		}
 		this.dialogue.removeAttribute("id");
 		if(choices.length > Config.maxVertical) {
 			this.dialogue.id = "horizontal";
@@ -209,6 +208,12 @@ App.prototype = {
 			break;
 		case "config.dialogue.vertical":
 			Config.maxVertical = Std.parseInt(data);
+			break;
+		case "config.fade.image":
+			Config.fadeImage = data == "true";
+			break;
+		case "config.fade.text":
+			Config.fadeText = data == "true";
 			break;
 		case "config.parse.speaker":
 			Config.speaker = data == "true";
@@ -266,8 +271,26 @@ App.prototype = {
 			window.document.querySelector("page").className = "novel";
 			this.imagebox.style.backgroundImage = "url('" + Config.folder + data + "')";
 			this.imagebox.style.display = "block";
-			App.fade(this.imagebox);
+			if(Config.fadeImage) {
+				this.fade(this.imagebox);
+			}
 		}
+	}
+	,fade: function(element,duration,from,to) {
+		if(to == null) {
+			to = 1;
+		}
+		if(from == null) {
+			from = 0;
+		}
+		if(duration == null) {
+			duration = 300;
+		}
+		element.style.transition = "none";
+		element.style.opacity = from == null ? "null" : "" + from;
+		element.getBoundingClientRect();
+		element.style.transition = "opacity " + duration + "ms";
+		element.style.opacity = to == null ? "null" : "" + to;
 	}
 	,onTransition: function(name) {
 		var _gthis = this;
@@ -286,20 +309,14 @@ App.prototype = {
 	,onEnd: function() {
 		this.buffer.clear();
 		this.textbox.innerHTML = Config.endText;
-		App.fade(this.textbox);
+		if(Config.fadeText) {
+			this.fade(this.textbox);
+		}
 		this.button.textContent = "Restart";
 		this.button.style.display = "block";
 		this.button.onclick = function(event) {
 			window.location.reload();
 		};
-	}
-	,customSyntax: function(page,entry) {
-		if(page.type == "text") {
-			if(page.data == "<img src=\"https" || page.data == "<img src=\"http") {
-				page.text = page.data + ":" + page.text;
-				page.data = "";
-			}
-		}
 	}
 };
 var Buffer = function() {
@@ -1653,6 +1670,8 @@ js_Boot.__toStr = ({ }).toString;
 Config.settings = "Settings";
 Config.endText = "<h2 style=\"text-align: center;\">The End.</h2>";
 Config.speaker = false;
+Config.fadeText = true;
+Config.fadeImage = true;
 Config.maxHeight = 80;
 Config.maxVertical = 3;
 Config.folder = "";

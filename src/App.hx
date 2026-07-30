@@ -46,7 +46,7 @@ class App {
 		
 		buffer = new Buffer();
 
-		harrow.Syntax.custom = customSyntax;
+		Library.ESCAPE = ":";
 		harrow.Random.dice = Dice.roll;
 
 		var storydata = document.querySelector('tw-storydata');
@@ -125,28 +125,24 @@ class App {
 	// Show button and text
 	function showText() {
 		button.style.display = 'block';
-		fade(textbox);
+		if (Config.fadeText) fade(textbox);
 	}
 
 
 	// Show text or add text to buffer
 	function onText(text:String, name:String) {
 		var limit = imagebox.style.display == 'block' ? Config.maxHeight - 20 : Config.maxHeight;
-
-		var speaker = name != "" ? '<span class = "speaker">' + name + '</span>' : "";
-		var element = name != "" ? '<p class = "' + name + '">' : '<p>';
-
-		if (!Config.speaker &&  name != "") speaker = name + ": ";
+		var paragraph = '<p>' + getText(text) + '</p>';
 
 		textbox.innerHTML += buffer.get();
 
 		if (currentFillRatio() > limit) {
-			buffer.set(element + speaker + text + '</p>');
+			buffer.set(paragraph);
 			showText();
 			return;
 		}
 
-		textbox.innerHTML += element + speaker + text + '</p>';
+		textbox.innerHTML += paragraph;
 
 		var full = currentFillRatio() > limit;
 		var next = novel.story.look(novel.story.page + 1);
@@ -172,6 +168,24 @@ class App {
 	}
 
 
+	function getText(entry:String):String {
+		if (!Config.speaker) return entry;
+	
+		var raw = StringTools.replace(entry, "\\:", Library.DIVIDE);
+		var key = raw.indexOf(":");
+	
+		if (key == -1) return entry;
+	
+		var name = StringTools.trim(raw.substr(0, key));
+		var text = StringTools.trim(raw.substr(key + 1));
+	
+		name = StringTools.replace(name, Library.DIVIDE, ":");
+		text = StringTools.replace(text, Library.DIVIDE, ":");
+	
+		return '<span class="speaker">' + name + '</span>' + text;
+	}
+
+
 	// Calculate textbox fill ratio
 	function currentFillRatio():Float {
 		if (textbox.clientHeight <= 0) return 0;
@@ -192,7 +206,7 @@ class App {
 	function onDialogue(choices:Array<Choice>) {
 		if (buffer.full()) textbox.innerHTML += buffer.get();
 
-		fade(textbox);
+		if (Config.fadeText) fade(textbox);
 
 		dialogue.removeAttribute("id");
 		if (choices.length > Config.maxVertical) dialogue.id = "horizontal";
@@ -231,16 +245,23 @@ class App {
 		switch (type) {
 			case "config.parse.speaker": 
 				Config.speaker = data == "true";
+
 			case "config.text.fill": 
 				Config.maxHeight = Std.parseInt(data);
 			case "config.dialogue.vertical": 
 				Config.maxVertical = Std.parseInt(data);
+
 			case "config.settings.title": 
 				Config.settings = Format.string(data);
 			case "config.text.end":
 				Config.endText = Format.string(data);
 			case "config.assets.folder": 
 				Config.folder = data;
+
+			case "config.fade.text": 
+				Config.fadeText = data == "true";
+			case "config.fade.image": 
+				Config.fadeImage = data == "true";
 
 			case "bookmark":
 				bookmark = data == "clear" ? -1 : story.page - 1;
@@ -298,12 +319,12 @@ class App {
 			imagebox.style.backgroundImage = "url('" + Config.folder + data + "')";
 			imagebox.style.display = 'block';
 
-			fade(imagebox);
+			if (Config.fadeImage) fade(imagebox);
 		}
 	}
 
 
-	static function fade(element:Element, duration:Int = 300, from:Float = 0, to:Float = 1) {
+	function fade(element:Element, duration:Int = 300, from:Float = 0, to:Float = 1) {
 		element.style.transition = 'none';
 		element.style.opacity = Std.string(from);
 		element.getBoundingClientRect();
@@ -335,22 +356,13 @@ class App {
 	function onEnd() {
 		buffer.clear(); 
 		textbox.innerHTML = Config.endText;
-		fade(textbox);
+
+		if (Config.fadeText) fade(textbox);
 
 		button.textContent = "Restart";
 		button.style.display = 'block';
 		button.onclick = function(event) {
 			window.location.reload();
-		}
-	}
-
-
-	function customSyntax(page:Page, entry:String) {
-		if (page.type == Page.TEXT) {
-			if (page.data == '<img src="https' || page.data == '<img src="http') {
-				page.text = page.data + ":" + page.text;
-				page.data = "";
-			}
 		}
 	}
 }

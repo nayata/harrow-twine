@@ -38,8 +38,7 @@
 html {
 	display: grid;
 	height: 100%;
-	font-size: 100%;
-	font-size: 21px;
+	font-size:clamp(16px, 1.5vw, 21px);
 }
 
 body {
@@ -55,19 +54,26 @@ body {
 
 /* Page Layout */
 page {
-	min-width: 0;
-	min-height: 0;
-	width: 700px;
-	height: 90%;
+	width: min(700px, calc(100vw - 48px));
+	height: min(90dvh, 900px);
+
 	display: grid;
 	grid-template-rows: auto 1fr auto;
+
 	position: absolute;
-	top: 0; bottom: 0; left: 0; right: 0;
+	inset: 0;
 	margin: auto;
-	border-radius: 16px;
-	font-size: 1rem;
-	background: var(--page-bg);
-	color: var(--text-color);
+
+	border-radius:16px;
+	font-size:1rem;
+
+	background:var(--page-bg);
+	color:var(--text-color);
+
+	overflow:hidden;
+
+	padding-top: env(safe-area-inset-top);
+	padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Page Layout with Illustration */
@@ -98,7 +104,6 @@ imagebox {
 	background-image: none;
 	background-position: 50% 50%;
 	background-size: cover;
-	opacity: 0;
 }
 
 textbox {
@@ -114,9 +119,6 @@ textbox p {
 textbox img {
 	width: 100%;
 	height: auto;
-}
-.speaker {
-	display: none;
 }
 
 action {
@@ -471,8 +473,50 @@ stat label {
     background: rgba(0, 0, 0, 0.4);
 }
 
-/* Resize */
-@media screen and (max-width: 600px) {
+/* Tablet */
+@media screen and (max-width:900px) {
+	html {
+		font-size:18px;
+	}
+	page {
+		width:100%;
+		height:100dvh;
+		border-radius:0;
+	}
+	settings {
+		border-radius:0;
+	}
+	header {
+		padding: 1.5em 2em 1em;
+	}
+	textbox {
+		padding: 1.5em 2em 0;
+	}
+	page.novel textbox {
+		padding: 1em 2em 0;
+	}
+	imagebox {
+		margin: 0 2em;
+	}
+	action {
+		padding: 0 2em 1.5em;
+	}
+	open, close {
+		top: 1.5em; right: 2em;
+	}
+	settings menu {
+		padding: 1em 2em 0;
+	}
+	navigation {
+		padding: 0 2em 1em;
+	}
+	settings textbox {
+		padding: 0 2em;
+	}
+}
+
+/* Mobile */
+@media screen and (max-width:480px) {
 	html {
 		font-size: 16px;
 	}
@@ -500,7 +544,7 @@ stat label {
 		padding: 1em 2em 0;
 	}
 	open, close {
-		right: 2em;
+		top: 2em; right: 2em;
 	}
 	settings {
 		border-radius: 0;
