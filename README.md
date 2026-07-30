@@ -275,6 +275,8 @@ Unlike variables and conditions, actions do not store or check data — they per
 
 ## Scene
 
+![Scene](./images/scene.png)
+
 `[scene PassageName]` Opens another passage as a scene while remembering the current location. When the scene is closed with `[scene close]`, the story returns to the place where the scene was opened.
 
 `[scene close]` — returns to the previous scene.
