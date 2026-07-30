@@ -131,7 +131,7 @@ class App {
 
 	// Show text or add text to buffer
 	function onText(text:String, name:String) {
-		var limit = imagebox.style.display == 'block' ? Config.maxHeight - 20 : Config.maxHeight;
+		var limit = imagebox.style.display == 'block' ? Math.max(Config.maxHeight - 20, 0) : Config.maxHeight;
 		var paragraph = '<p>' + getText(text) + '</p>';
 
 		textbox.innerHTML += buffer.get();
