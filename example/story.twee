@@ -1,140 +1,308 @@
 :: StoryTitle
-Story
+Dravenhold Hunt
 
 
 :: StoryData
 {
-  "ifid": "7CA64ECA-7052-4AD0-8509-4A7978D346DF",
+  "ifid": "9637F322-6645-46E1-AD62-DCC75F3770D2",
   "format": "Harrow",
-  "format-version": "1.0.0",
+  "format-version": "1.2.0",
   "start": "Start",
   "zoom": 1
 }
 
 
-:: Battle {"position":"700,300","size":"100,100"}
-Your health is [health] and you have [potions] potions. Weapon damage is [damage]. Monster health is [monster.health].
+:: Attack {"position":"1200,450","size":"100,100"}
+// Roll hit chance
+[hit roll 1d20]
+[hit + 5]
 
 
+// Show dice with 'hit' result
+[dice hit]
 
-[if  potions > 0]
-- Fast strike : hit = fast
-- Heavy strike       
-- Drink potion : Heal
+
+[if hit >= 12]
+    [dmg roll 1d20]
+    
+    [dmg + damage.bonus]
+    [dmg + damage]
+
+    [enemy.health - dmg]
+    
+	<span class="appear"><b>Success!</b><br>The strike connects, you hit the [enemy.name] with [dmg] damage.</span>
 [else]
-- Fast strike : hit = fast
-- Heavy strike
+  
+	<span class="appear"><b>You miss!</b><br>The [enemy.name] is quick. It lunges, and your next swing cuts only empty air.</span>
 [end]
+  
+  
+[move EnemyTurn]
+
+
+:: Battle {"position":"1200,100","size":"100,100"}
+[bookmark]
+
+<h2 style="text-align:center;">Battle</h2>
+
+[bar enemy.health]
+[bar health]
+[bar stamina]
+
+
+<span class="message">You keep your distance as the monster searches for an opening.</span>
+
+
+- Check Equipment : Equipment
+- Drink the Potion : Heal : potions > 0
+- Fast Strike : Fast
+- Heavy Strike : Heavy : stamina >= 10
+- Wait : EnemyTurn
 
 
 
-// Hit result
-
-[if hit = fast]
-	[damage roll 30]
-	[monster.health - damage]
-
-	The strike connects, your blade carving into its thick hide with a spray of black ichor.
-	You hit the beast with [damage] damage.
-[else]
-	You miss!
-
-	The beast is quick. It lunges, and your next swing cuts only empty air.
-[end]
 
 
-// Monster dead
+:: Church {"position":"700,500","size":"100,100"}
+You press on toward the towering church at the center of the city. The massive doors hang slightly ajar, and the scent of rot grows stronger with each step. You know the creature is inside.
 
-[if monster.health < 0]
-	[move Victory]
-[else]
-	[move Battle]
-[end]
+Before you reach the door, a low, guttural growl freezes you in place.
 
+The monster emerges, hunched and bristling with unnatural rage. Its voice, a rasp of human words twisted by its transformation, chills you to the bone: "You will die here."
 
-:: Church {"position":"500,300","size":"100,100"}
-You press on toward the towering church at the center of the city. 
-The massive doors hang slightly ajar, and the scent of rot grows stronger with each step. 
+In its yellowed eyes, you see a flicker of humanity-a soul begging to be freed. 
 
----
-
-You know the creature is inside.
-
-Before you reach the door, a low, guttural growl freezes you in place. The monster emerges, hunched and bristling with unnatural rage.
-
-Its voice, a rasp of human words twisted by its transformation, chills you to the bone: “You will die here.” 
-In its yellowed eyes, you see a flicker of humanity - a soul begging to be freed. 
 You draw your weapon.
 
-- Battle : Battle
-
-
-:: Heal {"position":"575,500","size":"100,100"}
-[potions - 1]
-[health + 20]
-
-You drink healing potion.
 
 [move Battle]
 
 
-:: Inside Chirch {"position":"1000,500","size":"100,100"}
-The church’s silence presses in as you step inside. Dust hangs in the air, thick with rot. Though the monster lies dead outside, something still pulls at your instincts - unfinished.
+:: Churchyard {"position":"500,500","size":"100,100"}
+The streets gradually widen into a neglected square where cracked statues of forgotten saints stand among patches of dead grass.
 
-The altar is broken, holy symbols defaced with strange carvings that seem to shift under your gaze. A faint rustling draws your ear - below.
+The church dominates the skyline, its weathered stone darkened by age, while shattered stained-glass windows reflect the last traces of daylight in fractured colors. Even from this distance, the scent of rot grows stronger, and every instinct tells you that the hunt is almost over.
 
-You find a trapdoor beneath a shattered pew and descend into the dark. The crypt beneath is lit by flickering, sickly light. Tombs lie open, their contents disturbed.
-
-A hooded figure stands at the center, its back to you. When it turns, its eyes glow faintly, and its voice is a whisper soaked in malice: “You shouldn’t have come here.”
-
-The earth shifts. Skeletal hands claw out of the ground. You cut down the first, but more rise. The figure begins to chant, red light pulsing from the symbols carved into its flesh.
-
-This wasn’t just a monster. It was the beginning of something far worse.
-
-With a battle cry, you charge toward the figure, determined to end this dark chapter before it begins.
+You tighten your grip on your weapon and continue toward the entrance.
 
 
-:: Settings {"position":"100,100","size":"100,100"}
-<h2>Settings</h2>
-
-Settings screen used to show various information.
+[move Church]
 
 
-:: Start {"position":"400,100","size":"100,100"}
-[health = 60]
-[damage = 30]
-[potions = 3]
+:: Defeat {"position":"1400,600","size":"100,100"}
+Your strength fails before the monster does. The final blow tears through your guard, and the cold stone rushes up to meet you. 
 
-[monster.health = 10]
-[monster.type = fast]
+As your vision fades, the creature's ragged breathing is the last sound you hear before darkness claims Dravenhold once more.
 
-[hit = default]
+[close]
 
 
-// First
+:: EnemyTurn {"position":"1200,600","size":"100,100"}
+// Enemy dead
+[if enemy.health <= 0]
+    [move Victory]
+[end]
+
+
+// Enemy attack
+[hit roll 1d100]
+
+
+[if hit <= 70]
+	[dmg roll 1d8]
+	[dmg + enemy.damage]
+	[health - dmg]
+
+    The monster lunges forward with terrifying speed, striking with its claws
+	The [enemy.name] strikes, dealing [dmg] damage.
+[else]
+	The monster lunges forward with terrifying speed, striking with its claws.
+	The [enemy.name] misses its attack.
+[end]
+
+
+// Player dead - moving to 'Defeat' route
+[if health <= 0]
+  [move Defeat]
+[end]
+
+
+[move Turn]
+
+
+:: Equipment {"position":"650,250","size":"100,100"}
+<h2>Character</h2>
+
+You are a seasoned monster hunter, trained to face creatures that others fear to name.
+
+
+[bar health]
+[bar stamina]
+
+<h4>Equipment</h4>
+
+• <b>Steel longsword</b>, sharpened before entering the city.<br>• <b>Silver dagger</b>, carried for creatures that ordinary steel cannot kill.<br>• <b>Healing potions</b> ([potions]).
+
+
+- Return : return
+
+
+:: Fast {"position":"1350,300","size":"100,100"}
+[damage.bonus = 0]
+
+[move Attack]
+
+
+:: Heal {"position":"1050,300","size":"100,100"}
+[potions - 1]
+[health + 25]
+
+[if health > health.max]
+  [health = health.max]
+[end]
+
+You drink healing potion. +25 HP
+[move Battle]
+
+
+:: Heavy {"position":"1200,300","size":"100,100"}
+[damage.bonus roll 1d20]
+[damage.bonus + damage]
+[stamina - 10]
+
+[move Attack]
+
+
+:: Intro {"position":"300,300","size":"100,100"}
+// Chapter Title
+[chapter Chapter One]
+
+
+<h2 style="text-align: center; font-size: 1.5em;">Chapter One</h2>
 
 The sun has almost set by the time you arrive in the crumbling city of Dravenhold. 
 Shadows stretch long and sharp over the cracked cobblestones, and the air is heavy with decay. 
 You are here for one purpose: to kill the monster.
 
-A faint voice calls out, halting your steps.
+The empty streets guide you deeper into the ruined city, where abandoned homes stand with their doors left open and market stalls have long since collapsed beneath years of neglect.
 
-- walk to beast nest : Church
-- aproach voice : Talk
-
-
-:: Talk {"position":"300,300","size":"100,100"}
-Turning, you find a wounded city guard slumped against a wall, clutching a deep wound in his side. 
-“It’s fast,” he wheezes, blood dripping from his lips.
-“Too fast...” His eyes close as he slips into unconsciousness.
-
-[move Church]
+Somewhere beyond the rooftops, the silhouette of the great church rises above everything else, watching over the dead city like a monument to its downfall.
 
 
-:: Victory {"position":"800,500","size":"100,100"}
-Breathing heavily, you steady your hand for the final blow. With a precise strike, you pierce its chest. 
+[move Streets]
 
-The monster lets out a piercing howl, crumbling to the ground as the light in its eyes dims. The abomination is no more.
-You slay the beast!
 
-[move Inside Chirch]
+:: Start {"position":"300,100","size":"100,100"}
+// Config
+[config.text.fill 70]
+[config.dialogue.vertical 2]
+[config.settings.title Game Settings]
+
+
+// Player
+[health = 60]
+[health.max = 60]
+[health.info = Player]
+[stamina.max = 20]
+[stamina = 20]
+
+[damage = 10]
+[damage.bonus = 0]
+[potions = 3]
+
+
+// Enemy
+[enemy.name = Abomination]
+
+[enemy.health.info = Abomination]
+[enemy.health.label = Health]
+[enemy.health.max = 200]
+[enemy.health = 200]
+
+[enemy.damage = 10]
+
+
+
+[move Intro]
+
+
+:: StoryAuthor {"position":"100,100","size":"100,100"}
+Story by Author
+
+
+:: Streets {"position":"300,500","size":"100,100"}
+As you make your way through the narrow streets, you notice deep gouges carved into the stone walls and long trails of dried blood leading toward the city center.
+
+Whatever happened here was not the work of frightened people fleeing in panic.
+
+Something hunted them.
+
+
+[bookmark]
+
+
+You pause beside the remains of an overturned wagon where scattered supplies lie half-buried beneath dust and broken timber. Nothing of value remains, but the brief stop reminds you to check your own gear before facing the creature that brought Dravenhold to ruin.
+
+You take one final moment to inspect your equipment before entering the church.
+
+
+- Check Equipment : Equipment
+- Continue : Churchyard
+
+
+:: Turn {"position":"1200,750","size":"100,100"}
+// New Turn
+
+[stamina + 3]
+[if stamina > stamina.max]
+	[stamina = stamina.max]
+[end]
+
+
+[move Battle]
+
+
+:: Victory {"position":"1000,600","size":"100,100"}
+Breathing heavily, you steady your hand for the final blow.
+
+With a precise strike, you pierce its chest. The monster lets out a piercing howl, crumbling to the ground as the light in its eyes dims.
+
+The abomination is no more. You slay the beast!
+
+[close]
+
+
+:: StoryStylesheet [stylesheet]
+span {
+  text-align: center;
+  display: block;
+}
+
+.message {
+  text-align: center;
+  color: #888;
+	font-style: italic;
+    display: block;
+}
+
+.appear {
+  display: block; 
+  text-align:center;
+	opacity: 0;
+	animation: fadeIn 0.3s ease forwards;
+	animation-delay:0.5s;
+}
+
+.appear b {
+  font-size:1em;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
