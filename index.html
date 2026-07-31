@@ -4,123 +4,257 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta charset="utf-8"/>
 		<link rel="stylesheet" href="main.css">
-		<title>Harrow</title>
+		<title>Dravenhold Hunt</title>
 	</head>
 	<body>
-		<tw-storydata name="Story" startnode="1" creator="Twine" creator-version="2.10.0" format="Harrow" format-version="1.2.0" ifid="7CA64ECA-7052-4AD0-8509-4A7978D346DF" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Start" tags="" position="400,100" size="100,100">[health = 60]
-			[damage = 30]
-			[potions = 3]
-			
-			[monster.health = 10]
-			[monster.type = fast]
-			
-			[hit = default]
-			
-			
-			// First
-			
-			The sun has almost set by the time you arrive in the crumbling city of Dravenhold. 
-			Shadows stretch long and sharp over the cracked cobblestones, and the air is heavy with decay. 
-			You are here for one purpose: to kill the monster.
-			
-			A faint voice calls out, halting your steps.
-			
-			- walk to beast nest : Church
-			- aproach voice : Talk</tw-passagedata><tw-passagedata pid="2" name="Talk" tags="" position="300,300" size="100,100">Turning, you find a wounded city guard slumped against a wall, clutching a deep wound in his side. 
-			“It’s fast,” he wheezes, blood dripping from his lips.
-			“Too fast...” His eyes close as he slips into unconsciousness.
-			
-			[move Church]</tw-passagedata><tw-passagedata pid="3" name="Church" tags="" position="500,300" size="100,100">You press on toward the towering church at the center of the city. 
-			The massive doors hang slightly ajar, and the scent of rot grows stronger with each step. 
-			
-			---
-			
-			You know the creature is inside.
-			
-			Before you reach the door, a low, guttural growl freezes you in place. The monster emerges, hunched and bristling with unnatural rage.
-			
-			Its voice, a rasp of human words twisted by its transformation, chills you to the bone: “You will die here.” 
-			In its yellowed eyes, you see a flicker of humanity - a soul begging to be freed. 
-			You draw your weapon.
-			
-			- Battle : Battle</tw-passagedata><tw-passagedata pid="4" name="Battle" tags="" position="700,300" size="100,100">Your health is [health] and you have [potions] potions. Weapon damage is [damage]. Monster health is [monster.health].
-			
-			
-			
-			[if  potions &gt; 0]
-			- Fast strike : hit = fast
-			- Heavy strike       
-			- Drink potion : Heal
-			[else]
-			- Fast strike : hit = fast
-			- Heavy strike
-			[end]
-			
-			
-			
-			// Hit result
-			
-			[if hit = fast]
-				[damage roll 30]
-				[monster.health - damage]
-			
-				The strike connects, your blade carving into its thick hide with a spray of black ichor.
-				You hit the beast with [damage] damage.
-			[else]
-				You miss!
-			
-				The beast is quick. It lunges, and your next swing cuts only empty air.
-			[end]
-			
-			
-			// Monster dead
-			
-			[if monster.health &lt; 0]
-				[move Victory]
-			[else]
-				[move Battle]
-			[end]</tw-passagedata><tw-passagedata pid="5" name="Heal" tags="" position="575,500" size="100,100">[potions - 1]
-			[health + 20]
-			
-			You drink healing potion.
-			
-			[move Battle]</tw-passagedata><tw-passagedata pid="6" name="Victory" tags="" position="800,500" size="100,100">Breathing heavily, you steady your hand for the final blow. With a precise strike, you pierce its chest. 
-			
-			The monster lets out a piercing howl, crumbling to the ground as the light in its eyes dims. The abomination is no more.
-			You slay the beast!
-			
-			[move Inside Chirch]</tw-passagedata><tw-passagedata pid="7" name="Inside Chirch" tags="" position="1000,500" size="100,100">The church’s silence presses in as you step inside. Dust hangs in the air, thick with rot. Though the monster lies dead outside, something still pulls at your instincts - unfinished.
-			
-			The altar is broken, holy symbols defaced with strange carvings that seem to shift under your gaze. A faint rustling draws your ear - below.
-			
-			You find a trapdoor beneath a shattered pew and descend into the dark. The crypt beneath is lit by flickering, sickly light. Tombs lie open, their contents disturbed.
-			
-			A hooded figure stands at the center, its back to you. When it turns, its eyes glow faintly, and its voice is a whisper soaked in malice: “You shouldn’t have come here.”
-			
-			The earth shifts. Skeletal hands claw out of the ground. You cut down the first, but more rise. The figure begins to chant, red light pulsing from the symbols carved into its flesh.
-			
-			This wasn’t just a monster. It was the beginning of something far worse.
-			
-			With a battle cry, you charge toward the figure, determined to end this dark chapter before it begins.</tw-passagedata><tw-passagedata pid="8" name="Settings" tags="" position="100,100" size="100,100">&lt;h2&gt;Settings&lt;/h2&gt;
-			
-			Settings screen used to show various information.</tw-passagedata></tw-storydata>
+	<tw-storydata name="Dravenhold Hunt" startnode="1" creator="Twine" creator-version="2.12.0" format="Harrow" format-version="1.2.0" ifid="9637F322-6645-46E1-AD62-DCC75F3770D2" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css">span {
+  text-align: center;
+  display: block;
+}
 
-			<transition></transition>
-			<page>
-			<settings></settings>
-			<close></close><open></open>
-			<header>
-				<chapter>Chapter</chapter>
-			</header>
-			<imagebox></imagebox>
-			<textbox></textbox>
-			<action>
-				<dialogue></dialogue>
-				<button></button>
-			</action>
-			</page>
-		</body>
+.message {
+  text-align: center;
+  color: #888;
+	font-style: italic;
+    display: block;
+}
 
-	<script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+.appear {
+  display: block; 
+  text-align:center;
+	opacity: 0;
+	animation: fadeIn 0.3s ease forwards;
+	animation-delay:0.5s;
+}
+
+.appear b {
+  font-size:1em;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}</style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="Start" tags="" position="300,100" size="100,100">// Config
+[config.text.fill 70]
+[config.dialogue.vertical 2]
+[config.settings.title Game Settings]
+
+
+// Player
+[health = 60]
+[health.max = 60]
+[health.info = Player]
+[stamina.max = 20]
+[stamina = 20]
+
+[damage = 10]
+[damage.bonus = 0]
+[potions = 3]
+
+
+// Enemy
+[enemy.name = Abomination]
+
+[enemy.health.info = Abomination]
+[enemy.health.label = Health]
+[enemy.health.max = 200]
+[enemy.health = 200]
+
+[enemy.damage = 10]
+
+
+
+[move Intro]</tw-passagedata><tw-passagedata pid="2" name="Streets" tags="" position="300,500" size="100,100">As you make your way through the narrow streets, you notice deep gouges carved into the stone walls and long trails of dried blood leading toward the city center.
+
+Whatever happened here was not the work of frightened people fleeing in panic.
+
+Something hunted them.
+
+
+[bookmark]
+
+
+You pause beside the remains of an overturned wagon where scattered supplies lie half-buried beneath dust and broken timber. Nothing of value remains, but the brief stop reminds you to check your own gear before facing the creature that brought Dravenhold to ruin.
+
+You take one final moment to inspect your equipment before entering the church.
+
+
+- Check Equipment : Equipment
+- Continue : Churchyard</tw-passagedata><tw-passagedata pid="3" name="Battle" tags="" position="1200,100" size="100,100">[bookmark]
+
+&lt;h2 style=&quot;text-align:center;&quot;&gt;Battle&lt;/h2&gt;
+
+[bar enemy.health]
+[bar health]
+[bar stamina]
+
+
+&lt;span class=&quot;message&quot;&gt;You keep your distance as the monster searches for an opening.&lt;/span&gt;
+
+
+- Check Equipment : Equipment
+- Drink the Potion : Heal : potions &gt; 0
+- Fast Strike : Fast
+- Heavy Strike : Heavy : stamina &gt;= 10
+- Wait : EnemyTurn
+
+
+</tw-passagedata><tw-passagedata pid="4" name="Heal" tags="" position="1050,300" size="100,100">[potions - 1]
+[health + 25]
+
+[if health &gt; health.max]
+  [health = health.max]
+[end]
+
+You drink healing potion. +25 HP
+[move Battle]</tw-passagedata><tw-passagedata pid="5" name="Heavy" tags="" position="1200,300" size="100,100">[damage.bonus roll 1d20]
+[damage.bonus + damage]
+[stamina - 10]
+
+[move Attack]</tw-passagedata><tw-passagedata pid="6" name="Fast" tags="" position="1350,300" size="100,100">[damage.bonus = 0]
+
+[move Attack]</tw-passagedata><tw-passagedata pid="7" name="EnemyTurn" tags="" position="1200,600" size="100,100">// Enemy dead
+[if enemy.health &lt;= 0]
+    [move Victory]
+[end]
+
+
+// Enemy attack
+[hit roll 1d100]
+
+
+[if hit &lt;= 70]
+	[dmg roll 1d8]
+	[dmg + enemy.damage]
+	[health - dmg]
+
+    The monster lunges forward with terrifying speed, striking with its claws
+	The [enemy.name] strikes, dealing [dmg] damage.
+[else]
+	The monster lunges forward with terrifying speed, striking with its claws.
+	The [enemy.name] misses its attack.
+[end]
+
+
+// Player dead - moving to &#39;Defeat&#39; route
+[if health &lt;= 0]
+  [move Defeat]
+[end]
+
+
+[move Turn]</tw-passagedata><tw-passagedata pid="8" name="Defeat" tags="" position="1400,600" size="100,100">Your strength fails before the monster does. The final blow tears through your guard, and the cold stone rushes up to meet you. 
+
+As your vision fades, the creature&#39;s ragged breathing is the last sound you hear before darkness claims Dravenhold once more.
+
+[close]</tw-passagedata><tw-passagedata pid="9" name="Attack" tags="" position="1200,450" size="100,100">// Roll hit chance
+[hit roll 1d20]
+[hit + 5]
+
+
+// Show dice with &#39;hit&#39; result
+[dice hit]
+
+
+[if hit &gt;= 12]
+    [dmg roll 1d20]
+    
+    [dmg + damage.bonus]
+    [dmg + damage]
+
+    [enemy.health - dmg]
+    
+	&lt;span class=&quot;appear&quot;&gt;&lt;b&gt;Success!&lt;/b&gt;&lt;br&gt;The strike connects, you hit the [enemy.name] with [dmg] damage.&lt;/span&gt;
+[else]
+  
+	&lt;span class=&quot;appear&quot;&gt;&lt;b&gt;You miss!&lt;/b&gt;&lt;br&gt;The [enemy.name] is quick. It lunges, and your next swing cuts only empty air.&lt;/span&gt;
+[end]
+  
+  
+[move EnemyTurn]</tw-passagedata><tw-passagedata pid="10" name="Churchyard" tags="" position="500,500" size="100,100">The streets gradually widen into a neglected square where cracked statues of forgotten saints stand among patches of dead grass.
+
+The church dominates the skyline, its weathered stone darkened by age, while shattered stained-glass windows reflect the last traces of daylight in fractured colors. Even from this distance, the scent of rot grows stronger, and every instinct tells you that the hunt is almost over.
+
+You tighten your grip on your weapon and continue toward the entrance.
+
+
+[move Church]</tw-passagedata><tw-passagedata pid="11" name="Equipment" tags="" position="650,250" size="100,100">&lt;h2&gt;Character&lt;/h2&gt;
+
+You are a seasoned monster hunter, trained to face creatures that others fear to name.
+
+
+[bar health]
+[bar stamina]
+
+&lt;h4&gt;Equipment&lt;/h4&gt;
+
+• &lt;b&gt;Steel longsword&lt;/b&gt;, sharpened before entering the city.&lt;br&gt;• &lt;b&gt;Silver dagger&lt;/b&gt;, carried for creatures that ordinary steel cannot kill.&lt;br&gt;• &lt;b&gt;Healing potions&lt;/b&gt; ([potions]).
+
+
+- Return : return</tw-passagedata><tw-passagedata pid="12" name="Church" tags="" position="700,500" size="100,100">You press on toward the towering church at the center of the city. The massive doors hang slightly ajar, and the scent of rot grows stronger with each step. You know the creature is inside.
+
+Before you reach the door, a low, guttural growl freezes you in place.
+
+The monster emerges, hunched and bristling with unnatural rage. Its voice, a rasp of human words twisted by its transformation, chills you to the bone: &quot;You will die here.&quot;
+
+In its yellowed eyes, you see a flicker of humanity-a soul begging to be freed. 
+
+You draw your weapon.
+
+
+[move Battle]</tw-passagedata><tw-passagedata pid="13" name="Victory" tags="" position="1000,600" size="100,100">Breathing heavily, you steady your hand for the final blow.
+
+With a precise strike, you pierce its chest. The monster lets out a piercing howl, crumbling to the ground as the light in its eyes dims.
+
+The abomination is no more. You slay the beast!
+
+[close]</tw-passagedata><tw-passagedata pid="14" name="Intro" tags="" position="300,300" size="100,100">// Chapter Title
+[chapter Chapter One]
+
+
+&lt;h2 style=&quot;text-align: center; font-size: 1.5em;&quot;&gt;Chapter One&lt;/h2&gt;
+
+The sun has almost set by the time you arrive in the crumbling city of Dravenhold. 
+Shadows stretch long and sharp over the cracked cobblestones, and the air is heavy with decay. 
+You are here for one purpose: to kill the monster.
+
+The empty streets guide you deeper into the ruined city, where abandoned homes stand with their doors left open and market stalls have long since collapsed beneath years of neglect.
+
+Somewhere beyond the rooftops, the silhouette of the great church rises above everything else, watching over the dead city like a monument to its downfall.
+
+
+[move Streets]</tw-passagedata><tw-passagedata pid="15" name="Turn" tags="" position="1200,750" size="100,100">// New Turn
+
+[stamina + 3]
+[if stamina &gt; stamina.max]
+	[stamina = stamina.max]
+[end]
+
+
+[move Battle]</tw-passagedata><tw-passagedata pid="16" name="StoryAuthor" tags="" position="100,100" size="100,100">Story by Author</tw-passagedata></tw-storydata>
+		<transition></transition>
+		<page>
+		<cover>
+			<content><name></name><author></author></content>
+		<start>Start</start>
+		</cover>
+		<settings></settings>
+		<close></close><open></open>
+		<header>
+			<chapter>Chapter</chapter>
+		</header>
+		<imagebox></imagebox>
+		<textbox></textbox>
+		<action>
+			<dialogue></dialogue>
+			<continue></continue>
+		</action>
+		</page>
+	</body>
+
 	<script type="text/javascript" src="novel.js"></script>
 </html>
