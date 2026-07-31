@@ -28,6 +28,11 @@ class Render {
 			label = label.split(".").shift();
 		}
 
+		var info = '';
+		if (Storage.has(name + ".info")) {
+			info = '<info>' + Storage.get(name + ".info") + '</info>';
+		}
+
 		var value = Std.parseFloat(Storage.get(name));
 		var total = Std.parseFloat(Storage.get(name + ".max"));
 		
@@ -36,6 +41,6 @@ class Render {
 
 		var percent = (value / total) * 100;
 
-		return '<stat><bar><fill style="width:${percent}%"></fill></bar><label>${label}: ${value}/${total}</label></stat>';
+		return '<stat><bar><fill style="width:${percent}%"></fill></bar><label>${label}: ${value}/${total}</label>${info}</stat>';
 	}
 }
