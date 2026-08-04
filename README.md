@@ -89,13 +89,23 @@ This example introduces most of the concepts you'll use throughout the documenta
 
 
 ## Text
-Text is written directly inside passages without any special markup.
+
+Text is written naturally inside passages without requiring special formatting.
 
 Unlike traditional Twine story formats, **Harrow Twine** automatically presents long passages one page at a time. When the current page becomes full, the remaining text is hidden until the reader presses **Continue**.
 
-This allows you to write naturally without manually splitting passages into smaller sections.
+You can also insert a manual page break by placing `--` on its own line.
 
-You can even place an entire chapter or short story inside a single passage, and **Harrow Twine** will paginate it automatically.
+```harrow
+The first part of the story.
+--
+The reader must press Continue before this text is shown.
+```
+
+This is useful for controlling pacing, dramatic pauses, or revealing information at specific moments. 
+
+The amount of text displayed before a page break can be adjusted with the `config.text.fill` configuration option. Setting a low `config.text.fill` value creates a visual novel–style presentation, where dialogue and narration are revealed in short segments. See **Configuration** for details.
+
 
 #### HTML Support
 
