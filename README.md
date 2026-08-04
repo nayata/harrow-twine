@@ -107,30 +107,46 @@ Commonly used elements include `<h2>`, `<span>`, and `<img>`.
 
 ## Choices
 
-Choices can be created using the `-` symbol at the beginning of a line.
+Choices are created by starting a line with the `-` symbol.
 
-A choice may include an action, written after a `:` symbol.
-There are two types of actions:
+A choice consists of the visible text followed by one or more optional fields separated by `:`.
 
-1. Route navigation – to jump to another passage.
-
-2. Variable operation – to change or assign a variable.
-
-A choice may also be empty and simply continue the current flow.
-
-```
-- Attack : damage = 20
-- Drink potion : Heal
-- Wait
+```harrow
+- Text : Route : Variable Action : Condition
 ```
 
-In this example:
+All fields except the choice text are optional.
 
-- The `Attack` choice uses an action to set damage to 20.
+* **Route** — moves to another passage.
+* **Variable Action** — modifies a variable or performs another supported variable operation.
+* **Condition** — controls whether the choice is available.
 
-- The `Drink potion` choice uses an action to navigate to the `Heal` route.
+Examples:
 
-- The `Wait` choice has no action and continues the current flow.
+```harrow
+- Enter the cave : Cave
+- Light a torch : torch = true
+- Climb the cliff : Cliff : stamina - 10
+- Continue
+```
+
+A choice with no additional fields simply continues the current passage.
+
+#### Conditional Choices
+
+The optional fields may appear in **any order**. Harrow Twine automatically determines whether each field represents a route, variable action, or condition.
+
+A condition can be added to control whether a choice is available.
+
+```harrow
+- Open the treasure chest : Treasure : hasKey is true
+- Search the ruins : energy >= 20 : Ruins : energy - 20
+- Open the ancient gate : hasKey is true : Gate
+```
+
+If the condition evaluates to **false**, the choice remains visible but is disabled. Disabled choices receive the CSS class `disabled` and cannot be selected.
+
+By default, disabled choices remain visible so the player can see that the option exists but is currently unavailable. If preferred, they can be hidden entirely by overriding the `.disabled` CSS class.
 
 
 
@@ -532,7 +548,7 @@ The content of a menu passage supports:
 * `[stat]`
 * `[bar]`
 
-Menu passages are **read-only**. They do not execute variable assignments or other state-changing operations such as `=`, `+=`, `-=`, `%+`, `%-`, or `roll`. Opening a tab displays the current state of the story without modifying it.
+**Menu passages are read-only.** They do not execute variable assignments or other state-changing operations such as `=`, arithmetic operators (`+`, `-`, `%+`, `%-`, etc.), `roll`, and similar operations. Opening a tab displays the current state of the story without modifying it.
 
 
 ## Title Screen
