@@ -265,16 +265,6 @@ A simple `if`.
 [end]
 ```
 
-`chance` condition.
-
-```
-[torch.lit = false]
-
-[if torch.lit chance 50]
-    [torch.lit = true]
-    You fire the torch and long shadows falls across the stone walls.
-[end]
-```
 
 
 ## Actions
