@@ -266,15 +266,15 @@ A simple `if`.
 ```
 [torch.lit = true]
 
-[if torch.lit = true]
+[if torch.lit == true]
     The torch casts long shadows across the stone walls.
 [end]
 ```
 
-`if/else` condition.
+`if/else` condition. As an alternative to `==`, Harrow also supports the `is` operator for equality comparisons.
 
 ```
-[if torch.lit = true]
+[if torch.lit is true]
     The torch casts long shadows across the stone walls.
 [else]
     Darkness swallows everything beyond the first few steps.
