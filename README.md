@@ -555,3 +555,27 @@ Below the title is a reserved line for the author's name. Since Twine does not p
 
 Create a passage with that exact name and place the author's name (or any other text) inside it. If the `StoryAuthor` passage is not present, the default placeholder **"Story by Author"** is displayed.
 
+
+## Configuration
+
+Configuration options allow you to customize story behavior and interface elements.
+
+Configuration commands should be placed near the beginning of the story, before any content is displayed.
+
+```harrow
+[config.parse.speaker true]
+[config.text.fill 80]
+[config.dialogue.vertical 3]
+[config.settings.title Game Settings]
+[config.text.end <h2>That is where the story ends.</h2>]
+[config.assets.folder images/]
+```
+
+Available options:
+
+* **`config.parse.speaker`** — enables or disables speaker formatting for dialogue lines written as `Name: text`. When enabled, the speaker name is wrapped in a styled `<span class="speaker">` element.
+* **`config.text.fill`** — percentage of the textbox height used before a page break is created. Lower values create shorter pages.
+* **`config.dialogue.vertical`** — number of choices after which dialogue choices switch from vertical to horizontal layout.
+* **`config.settings.title`** — title displayed at the top of the Settings screen.
+* **`config.text.end`** — text displayed when the story ends or when `[close]` is used.
+* **`config.assets.folder`** — base path used by `[image ...]` for local image assets.
