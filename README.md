@@ -152,38 +152,44 @@ By default, disabled choices remain visible so the player can see that the optio
 
 ## Branching
 
-Branching in Harrow is done using `routes`, which are declared with the `#` symbol at the beginning of a line.
-Routes function similarly to `passages`.
+Branching in Harrow is done using **routes**, which are declared with the `#` symbol at the beginning of a line.
 
-To move to a specific route, use an action in a choice or a move command:
-`[move RouteName]`.
+```harrow
+# Village
 
-**Important:** The story flow stops when a new route begins.
-An explicit action is required to transition into that route.
-
-#### Example
-
-Moving via choice:
-
-```
-The mouth of the cave yawns open, cold air curling out like breath.
-- Enter the cave : CaveInterior
-
-
-# CaveInterior
-You step into the cave. It's cold and silent.
+You arrive at the village square.
 ```
 
-Moving via command:
+In Harrow Twine, routes are the equivalent of **Twine passages**. Each passage represents a separate route that can be reached through choices or actions such as `[move]`.
 
+Route names must be **unique** throughout the story.
+
+In addition to Twine's visual passage editor, Harrow Twine also supports **Twee notation** using the `::` syntax.
+
+```twee
+:: Village
+
+You arrive at the village square.
+
+- Visit the tavern : Tavern
+- Leave town : Forest
+
+:: Tavern
+
+The tavern is warm and crowded.
+
+[move Village]
+
+:: Forest
+
+The trees quickly swallow the road behind you.
+
+[close]
 ```
-The mouth of the cave yawns open, cold air curling out like breath.
-[move CaveInterior]
 
+**Important:** Execution always remains within the current route. If processing reaches the beginning of another route without an explicit jump, execution stops automatically rather than continuing into the next route.
 
-# CaveInterior
-You step into the cave. It's cold and silent.
-```
+This allows multiple route definitions to exist in the same source while ensuring that each route is entered only through a choice or an action such as `[move]`.
 
 
 
@@ -214,7 +220,7 @@ A variable can be assigned a random value:
 
 #### Variable operations
 
-Basic mathematical operations (`+`, `-`, `*`, and `/`) are supported. Other variables can be used in calculations.
+Basic mathematical operations (`+`, `-`, `*`, `/`, and `%`) are supported. Other variables can be used in calculations.
 
 ```
 [damage = 20]
