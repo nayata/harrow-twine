@@ -42,6 +42,9 @@ class Parser {
 						string = StringTools.replace(string, "]]", "");
 						string = "[move " + string + "]";
 					}
+					if (link == "::") {
+						string = StringTools.replace(string, "::", "#");
+					}
 
 					// Fix 'greater-than/less-than' sign
 					string = StringTools.replace(string, "&lt;", "<");
