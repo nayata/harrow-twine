@@ -4,9 +4,6 @@ class Config {
 
 	public static var speaker:Bool = false;
 
-	public static var fadeText:Bool = true;
-	public static var fadeImage:Bool = true;
-
 	public static var maxHeight:Int = 80;
 	public static var maxVertical:Int = 3;
 	

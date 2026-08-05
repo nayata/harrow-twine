@@ -125,7 +125,7 @@ class App {
 	// Show button and text
 	function showText() {
 		button.style.display = 'block';
-		if (Config.fadeText) fade(textbox);
+		animate(textbox);
 	}
 
 
@@ -156,7 +156,7 @@ class App {
 
 		if (full) return;
 
-		var allowed = (next.type == Page.TEXT || next.type == Page.DIALOGUE || next.type == Page.EVENT);
+		var allowed = (next.type == Page.TEXT || next.type == Page.DIALOGUE || next.type == Page.VARIABLE || next.type == Page.EVENT);
 
 		if (next.type == Page.EVENT) {
 			if (next.data == "return") allowed = false;
@@ -206,7 +206,7 @@ class App {
 	function onDialogue(choices:Array<Choice>) {
 		if (buffer.full()) textbox.innerHTML += buffer.get();
 
-		if (Config.fadeText) fade(textbox);
+		animate(textbox);
 
 		dialogue.removeAttribute("id");
 		if (choices.length > Config.maxVertical) dialogue.id = "horizontal";
@@ -220,7 +220,7 @@ class App {
 			if (!allowed) choice.className = "disabled";
 			
 			choice.onclick = function(event) {
-				onSelect(entry.type, entry.data);
+				onSelect(entry.link, entry.data);
 			}
 			dialogue.appendChild(choice);
 		}
@@ -228,13 +228,13 @@ class App {
 
 
 	// Send dialogue selected choice to Runtime
-	function onSelect(type:String, data:String) {
+	function onSelect(link:String, data:String) {
 		dialogue.innerHTML = "";
 		textbox.innerHTML = "";
 
-		if (type == "route" && data != "return") story.move(data);
-		if (data == "return" && bookmark != -1) story.turn(bookmark);
-		if (type == "variable") Logic.variable(data);
+		if (link != "empty" && link != "return") story.move(link);
+		if (link == "return" && bookmark != -1) story.turn(bookmark);
+		if (data != "empty") Logic.variable(data);
 		
 		novel.nextPage();
 	}
@@ -257,11 +257,6 @@ class App {
 				Config.endText = Format.string(data);
 			case "config.assets.folder": 
 				Config.folder = data;
-
-			case "config.fade.text": 
-				Config.fadeText = data == "true";
-			case "config.fade.image": 
-				Config.fadeImage = data == "true";
 
 			case "bookmark":
 				bookmark = data == "clear" ? -1 : story.page - 1;
@@ -319,17 +314,15 @@ class App {
 			imagebox.style.backgroundImage = "url('" + Config.folder + data + "')";
 			imagebox.style.display = 'block';
 
-			if (Config.fadeImage) fade(imagebox);
+			animate(imagebox);
 		}
 	}
 
 
-	function fade(element:Element, duration:Int = 300, from:Float = 0, to:Float = 1) {
-		element.style.transition = 'none';
-		element.style.opacity = Std.string(from);
+	function animate(element:Element) {
+		element.classList.remove("animated");
 		element.getBoundingClientRect();
-		element.style.transition = 'opacity ${duration}ms';
-		element.style.opacity = Std.string(to);
+		element.classList.add("animated");
 	}
 
 
@@ -356,8 +349,7 @@ class App {
 	function onEnd() {
 		buffer.clear(); 
 		textbox.innerHTML = Config.endText;
-
-		if (Config.fadeText) fade(textbox);
+		animate(textbox);
 
 		button.textContent = "Restart";
 		button.style.display = 'block';
